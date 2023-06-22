@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:yaml/yaml.dart';
 
 class ConfigProvider with ChangeNotifier {
-  late String songListUrl;
-  late String songFileUrl;
-  late String songPostUrl;
+  String songListUrl = '';
+  String songFileUrl = '';
+  String songPostUrl = '';
 
   ConfigProvider() {
     loadConfig();
