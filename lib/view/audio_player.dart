@@ -10,10 +10,10 @@ class MyAudioPlayerWidget extends StatefulWidget {
   const MyAudioPlayerWidget({required this.id, key}) : super(key: key);
 
   @override
-  MyAudioPlayerWidgetState createState() => MyAudioPlayerWidgetState();
+  State createState() => _MyAudioPlayerWidgetState();
 }
 
-class MyAudioPlayerWidgetState extends State<MyAudioPlayerWidget> {
+class _MyAudioPlayerWidgetState extends State<MyAudioPlayerWidget> {
   late AudioPlayer _audioPlayer;
   Duration _audioPosition = const Duration();
 
