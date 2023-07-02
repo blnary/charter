@@ -78,25 +78,19 @@ class SongsProvider with ChangeNotifier {
       final url = 'http://10.249.45.98/sync/$id';
       final response = await http.post(Uri.parse(url));
       if (response.statusCode == 200) {
-        final url = "http://10.249.45.98/bpm/$id";
-        final response = await http.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final jsonData = json.decode(response.body) as dynamic;
-          if (!jsonData["success"]) {
-            throw Exception('获取更新的 BPM 失败: ${jsonData["msg"]}');
-          }
-          final bpm = jsonData["bpm"] as num;
-          final offset = jsonData["offset"] as num;
-          songs[_selected] = Song(
-            id: id,
-            name: name,
-            bpm: bpm.toDouble(),
-            offset: offset.toInt(),
-          );
-          notifyListeners();
-        } else {
-          throw Exception('获取更新的 BPM 失败: ${response.statusCode}');
+        final jsonData = json.decode(response.body) as dynamic;
+        if (!jsonData["success"]) {
+          throw Exception('获取更新的 BPM 失败: ${jsonData["msg"]}');
         }
+        final bpm = jsonData["bpm"] as num;
+        final offset = jsonData["offset"] as num;
+        songs[_selected] = Song(
+          id: id,
+          name: name,
+          bpm: bpm.toDouble(),
+          offset: offset.toInt(),
+        );
+        notifyListeners();
       } else {
         throw Exception('同步失败: ${response.statusCode}');
       }
@@ -104,6 +98,33 @@ class SongsProvider with ChangeNotifier {
       return '错误: $error';
     }
     return '成功同步！';
+  }
+
+  Future<String> cal() async {
+    try {
+      final url = 'http://10.249.45.98/cal/$id';
+      final response = await http.post(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body) as dynamic;
+        if (!jsonData["success"]) {
+          throw Exception('获取更新的 BPM 失败: ${jsonData["msg"]}');
+        }
+        final bpm = jsonData["bpm"] as num;
+        final offset = jsonData["offset"] as num;
+        songs[_selected] = Song(
+          id: id,
+          name: name,
+          bpm: bpm.toDouble(),
+          offset: offset.toInt(),
+        );
+        notifyListeners();
+      } else {
+        throw Exception('计算失败: ${response.statusCode}');
+      }
+    } catch (error) {
+      return '错误: $error';
+    }
+    return '成功计算！';
   }
 
   Future<String> set(double bpm, int offset) async {
