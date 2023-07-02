@@ -57,7 +57,6 @@ class _AudioPageState extends State<AudioPage> {
     var songsProvider = Provider.of<SongsProvider>(context);
 
     Future<void> setDelay() async {
-      // TODO refuse to set delay when BPM is 0
       if (!_isAudioPlaying) {
         return;
       }
@@ -104,11 +103,18 @@ class _AudioPageState extends State<AudioPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // TODO change to icon button and move to bottom
+                    Text(
+                      "上次延迟: $lastDelay ms",
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    Text(
+                      "平均延迟: $avgDelay ms",
+                      style: const TextStyle(fontSize: 20),
+                    ),
                     ButtonBar(
                       alignment: MainAxisAlignment.center,
                       children: [
-                        ElevatedButton(
+                        TextButton(
                           onPressed: () async {
                             if (_isAudioPlaying) {
                               _isAudioPlaying = false;
@@ -122,17 +128,12 @@ class _AudioPageState extends State<AudioPage> {
                               await playAudio(_audioPlayer, url);
                             }
                           },
-                          child: Text(_isAudioPlaying ? "暂停" : "播放"),
+                          child: _isAudioPlaying
+                              ? const Tab(icon: Icon(Icons.pause), text: "暂停")
+                              : const Tab(
+                                  icon: Icon(Icons.play_arrow), text: "播放"),
                         ),
                       ],
-                    ),
-                    Text(
-                      "上次延迟: $lastDelay ms",
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    Text(
-                      "平均延迟: $avgDelay ms",
-                      style: const TextStyle(fontSize: 20),
                     ),
                   ],
                 ),
