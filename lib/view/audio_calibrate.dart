@@ -21,6 +21,8 @@ class _AudioPageState extends State<AudioPage> {
   final OffsetCalculator _offsetCalculator = OffsetCalculator();
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
+  double _sliderValue = 0;
+  Duration audioLength = const Duration(minutes: 1);
   late StreamSubscription<Duration> _positionSubscription;
 
   int get elapsedTime {
@@ -35,6 +37,7 @@ class _AudioPageState extends State<AudioPage> {
     _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
       setState(() {
         _audioStartTime = DateTime.now().subtract(event);
+        _sliderValue = event.inMilliseconds / audioLength.inMilliseconds;
       });
     });
   }
@@ -50,7 +53,6 @@ class _AudioPageState extends State<AudioPage> {
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final Color bgColor = colorScheme.primary.withOpacity(0.1);
-
     int lastDelay = _offsetCalculator.lastDelay;
     int avgDelay = _offsetCalculator.avgDelay;
     var offsetProvider = Provider.of<OffsetProvider>(context);
@@ -111,10 +113,11 @@ class _AudioPageState extends State<AudioPage> {
                       "平均延迟: $avgDelay ms",
                       style: const TextStyle(fontSize: 20),
                     ),
+                    // TODO encapsulate audio player
                     ButtonBar(
                       alignment: MainAxisAlignment.center,
                       children: [
-                        TextButton(
+                        ElevatedButton(
                           onPressed: () async {
                             if (_isAudioPlaying) {
                               _isAudioPlaying = false;
@@ -125,13 +128,44 @@ class _AudioPageState extends State<AudioPage> {
                                   'http://10.249.45.98/songs/${songsProvider.id}';
                               _offsetCalculator.setBpm(songsProvider.bpm);
                               _offsetCalculator.setOffset(songsProvider.offset);
-                              await playAudio(_audioPlayer, url);
+                              await _audioPlayer.play(UrlSource(url));
+                              await Future.delayed(
+                                  const Duration(milliseconds: 200));
+                              var duration = await _audioPlayer.getDuration();
+                              if (duration != null) {
+                                // TODO fix this
+                                print(duration);
+                                audioLength = duration;
+                              }
                             }
                           },
                           child: _isAudioPlaying
-                              ? const Tab(icon: Icon(Icons.pause), text: "暂停")
-                              : const Tab(
-                                  icon: Icon(Icons.play_arrow), text: "播放"),
+                              ? const Tab(icon: Icon(Icons.pause))
+                              : const Tab(icon: Icon(Icons.play_arrow)),
+                        ),
+                        Slider(
+                          value: _sliderValue.clamp(0, 1),
+                          min: 0,
+                          activeColor: Colors.red,
+                          max: 1,
+                          onChangeEnd: (double value) async {
+                            // await audioPlayer.fixedPlayer!.resume();
+                          },
+                          onChangeStart: (double value) async {
+                            if (_isAudioPlaying) {
+                              _isAudioPlaying = false;
+                              _audioPlayer.pause();
+                            }
+                          },
+                          onChanged: (val) {
+                            setState(() {
+                              _sliderValue = val;
+                              _audioPlayer.seek(Duration(
+                                  milliseconds:
+                                      (audioLength.inMilliseconds * val)
+                                          .toInt()));
+                            });
+                          },
                         ),
                       ],
                     ),
