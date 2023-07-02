@@ -57,6 +57,7 @@ class _AudioPageState extends State<AudioPage> {
     var songsProvider = Provider.of<SongsProvider>(context);
 
     Future<void> setDelay() async {
+      // TODO refuse to set delay when BPM is 0
       if (!_isAudioPlaying) {
         return;
       }
@@ -103,6 +104,7 @@ class _AudioPageState extends State<AudioPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // TODO change to icon button and move to bottom
                     ButtonBar(
                       alignment: MainAxisAlignment.center,
                       children: [

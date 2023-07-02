@@ -45,23 +45,24 @@ class SongsProvider with ChangeNotifier {
   int get offset => songs[_selected].offset;
 
   SongsProvider() {
-    fetch("http://10.249.45.98/songs");
+    fetch();
   }
 
-  Future<void> fetch(String url) async {
-    _loading = true;
-    notifyListeners();
+  Future<void> fetch() async {
     try {
+      const url = "http://10.249.45.98/songs";
+      _loading = true;
+      notifyListeners();
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as dynamic;
         if (!jsonData["success"]) {
-          throw Exception('Failed to fetch song list: ${jsonData["message"]}');
+          throw Exception('获取歌曲列表失败: ${jsonData["msg"]}');
         }
         final jsonList = jsonData["songs"] as List<dynamic>;
         _songs = jsonList.map((json) => Song.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to fetch song list: ${response.statusCode}');
+        throw Exception('获取歌曲列表失败: ${response.statusCode}');
       }
     } catch (e) {
       _failed = true;
@@ -70,6 +71,68 @@ class SongsProvider with ChangeNotifier {
       _loading = false;
       notifyListeners();
     }
+  }
+
+  Future<String> sync() async {
+    try {
+      final url = 'http://10.249.45.98/sync/$id';
+      final response = await http.post(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final url = "http://10.249.45.98/bpm/$id";
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body) as dynamic;
+          if (!jsonData["success"]) {
+            throw Exception('获取更新的 BPM 失败: ${jsonData["msg"]}');
+          }
+          final bpm = jsonData["bpm"] as num;
+          final offset = jsonData["offset"] as num;
+          songs[_selected] = Song(
+            id: id,
+            name: name,
+            bpm: bpm.toDouble(),
+            offset: offset.toInt(),
+          );
+          notifyListeners();
+        } else {
+          throw Exception('获取更新的 BPM 失败: ${response.statusCode}');
+        }
+      } else {
+        throw Exception('同步失败: ${response.statusCode}');
+      }
+    } catch (error) {
+      return '错误: $error';
+    }
+    return '成功同步！';
+  }
+
+  Future<String> set(double bpm, int offset) async {
+    try {
+      final url = 'http://10.249.45.98/bpm/$id';
+      final jsonData = {
+        'bpm': bpm,
+        'offset': offset,
+      };
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(jsonData),
+      );
+      if (response.statusCode == 200) {
+        songs[_selected] = Song(
+          id: id,
+          name: name,
+          bpm: bpm.toDouble(),
+          offset: offset.toInt(),
+        );
+        notifyListeners();
+      } else {
+        throw Exception('设置失败: ${response.statusCode}');
+      }
+    } catch (error) {
+      return '错误: $error';
+    }
+    return '成功设置！';
   }
 
   void select(int index) {
