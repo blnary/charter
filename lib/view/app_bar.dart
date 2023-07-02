@@ -1,3 +1,4 @@
+import 'package:charter/view/charter_page.dart';
 import 'package:charter/view/song_page.dart';
 import 'package:flutter/material.dart';
 import 'package:charter/view/audio_calibrate.dart';
@@ -65,20 +66,12 @@ class AppBarExample extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: <Widget>[
-            const InputPage(),
-            const AudioPage(),
-            const SongsPage(),
-            ListView.builder(
-              itemCount: 25,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  tileColor: index.isOdd ? oddItemColor : evenItemColor,
-                  title: Text('${titles[3]} $index'),
-                );
-              },
-            ),
+            InputPage(),
+            AudioPage(),
+            SongsPage(),
+            CharterPage(),
           ],
         ),
       ),
