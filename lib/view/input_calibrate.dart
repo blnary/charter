@@ -26,7 +26,7 @@ class InputPage extends StatefulWidget {
 
 class _InputPageState extends State<InputPage> {
   final DateTime _startTime = DateTime.now();
-  final OffsetCalculator _offsetCalculator = OffsetCalculator(0, 60);
+  final OffsetCalculator _offsetCalculator = OffsetCalculator();
 
   int get elapsedTime {
     final currentTime = DateTime.now();
@@ -36,6 +36,10 @@ class _InputPageState extends State<InputPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color mainColor = colorScheme.primary.withOpacity(0.5);
+    final Color bgColor = colorScheme.primary.withOpacity(0.1);
+
     int lastPressTime = _offsetCalculator.lastPressTime;
     int lastDelay = _offsetCalculator.lastDelay;
     int avgDelay = _offsetCalculator.avgDelay;
@@ -67,21 +71,21 @@ class _InputPageState extends State<InputPage> {
             Expanded(
               flex: 1,
               child: Container(
-                color: Colors.white,
+                color: Colors.transparent,
                 child: Stack(
                   children: [
                     Align(
                       alignment: const Alignment(0, spanEnd),
                       child: Container(
                         height: 4,
-                        color: Colors.black,
+                        color: mainColor,
                       ),
                     ),
                     Align(
                       alignment: Alignment(0, posPress),
                       child: Container(
                         height: 4,
-                        color: Colors.lightBlue,
+                        color: bgColor,
                       ),
                     ),
                     Note(
@@ -94,7 +98,7 @@ class _InputPageState extends State<InputPage> {
             Expanded(
               flex: 1,
               child: Container(
-                color: Colors.grey[200],
+                color: bgColor,
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -159,13 +163,16 @@ class _NoteState extends State<Note> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color noteColor = colorScheme.primary.withOpacity(0.8);
+
     double posNote = getPosOf(elapsedTime);
     return Align(
       alignment: Alignment(0, posNote),
       child: Container(
         height: 4,
         width: 128,
-        color: Colors.red,
+        color: noteColor,
       ),
     );
   }

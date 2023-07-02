@@ -1,3 +1,4 @@
+import 'package:charter/view/song_page.dart';
 import 'package:flutter/material.dart';
 import 'package:charter/view/audio_calibrate.dart';
 import 'package:charter/view/input_calibrate.dart';
@@ -68,15 +69,7 @@ class AppBarExample extends StatelessWidget {
           children: <Widget>[
             const InputPage(),
             const AudioPage(),
-            ListView.builder(
-              itemCount: 25,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  tileColor: index.isOdd ? oddItemColor : evenItemColor,
-                  title: Text('${titles[2]} $index'),
-                );
-              },
-            ),
+            const SongsPage(),
             ListView.builder(
               itemCount: 25,
               itemBuilder: (BuildContext context, int index) {
