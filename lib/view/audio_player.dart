@@ -1,8 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
-import '../util/song_player.dart';
-import '../model/config.dart';
+import 'package:charter/util/song_player.dart';
 
 class MyAudioPlayerWidget extends StatefulWidget {
   final int id;
@@ -14,35 +14,34 @@ class MyAudioPlayerWidget extends StatefulWidget {
 }
 
 class _MyAudioPlayerWidgetState extends State<MyAudioPlayerWidget> {
-  late AudioPlayer _audioPlayer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   Duration _audioPosition = const Duration();
+  late StreamSubscription<Duration> _positionSubscription;
 
   @override
   void initState() {
     super.initState();
-    _initAudioPlayer();
-  }
-
-  void _initAudioPlayer() {
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.onPositionChanged.listen((event) {
+    _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
       setState(() {
         _audioPosition = event;
       });
     });
   }
 
-  Future<void> _playAudio(String songFileUrl) async {
-    final url = '$songFileUrl/${widget.id}';
+  @override
+  void dispose() async {
+    _positionSubscription.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playAudio() async {
+    final url = 'http://10.249.45.98/songs/${widget.id}';
     await playAudio(_audioPlayer, url);
   }
 
   Future<void> _pauseAudio() async {
     await _audioPlayer.pause();
-  }
-
-  Future<void> _stopAudio() async {
-    await _audioPlayer.stop();
   }
 
   String _formatDuration(Duration duration) {
@@ -53,28 +52,18 @@ class _MyAudioPlayerWidgetState extends State<MyAudioPlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ConfigProvider>(
-      builder: (context, configProvider, _) {
-        final songFileUrl = configProvider.songFileUrl;
-
-        return Row(
-          children: [
-            ElevatedButton(
-              onPressed: () => _playAudio(songFileUrl),
-              child: const Text('Play'),
-            ),
-            ElevatedButton(
-              onPressed: _pauseAudio,
-              child: const Text('Pause'),
-            ),
-            ElevatedButton(
-              onPressed: _stopAudio,
-              child: const Text('Stop'),
-            ),
-            Text(_formatDuration(_audioPosition)),
-          ],
-        );
-      },
+    return Row(
+      children: [
+        ElevatedButton(
+          onPressed: () => _playAudio(),
+          child: const Text('Play'),
+        ),
+        ElevatedButton(
+          onPressed: _pauseAudio,
+          child: const Text('Pause'),
+        ),
+        Text(_formatDuration(_audioPosition)),
+      ],
     );
   }
 }

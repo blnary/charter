@@ -22,7 +22,7 @@ Future<void> loadAudio(String url) async {
 }
 
 Future<AudioPlayer> playAudio(AudioPlayer player, String url) async {
-  await loadAudio(url);
+  // await loadAudio(url);
   await player.play(UrlSource(url));
   return player;
 }
