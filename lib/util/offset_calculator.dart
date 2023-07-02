@@ -11,6 +11,9 @@ class OffsetCalculator {
   int get avgDelay => _avgDelay;
 
   void setDelay(int time) {
+    if (_bpm == 0) {
+      return;
+    }
     int mspb = (60000 / _bpm).round();
     _lastPressTime = time;
     _lastDelay = (_lastPressTime - _offset + mspb ~/ 2) % mspb - mspb ~/ 2;
