@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import './model/song.dart';
-import './model/config.dart';
-import './view/audio_player.dart';
+import './model/offset.dart';
+import './view/app_bar.dart';
 
 Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SongsProvider()),
-        ChangeNotifierProvider(create: (_) => ConfigProvider()),
+        ChangeNotifierProvider(create: (_) => OffsetProvider()),
       ],
       child: const MyApp(),
     ),
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyAudioPlayerWidget(id: 4),
+      home: const AppBarExample(),
     );
   }
 }
