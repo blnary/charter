@@ -146,9 +146,16 @@ class _SongsPageState extends State<SongsPage> {
                           icon: Icon(Icons.settings_sharp), text: "修改"),
                     ),
                     TextButton(
-                      onPressed: () async {},
+                      onPressed: () async {
+                        String msg = await songsProvider.cal();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(msg),
+                              duration: const Duration(seconds: 1)));
+                        }
+                      },
                       child: const Tab(
-                          icon: Icon(Icons.science_sharp), text: "测试"),
+                          icon: Icon(Icons.science_sharp), text: "计算"),
                     ),
                     TextButton(
                       onPressed: () async {
