@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:charter/model/song.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +18,8 @@ class AudioPage extends StatefulWidget {
 
 class _AudioPageState extends State<AudioPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  final OffsetCalculator _offsetCalculator = OffsetCalculator(65559, 140);
+  final OffsetCalculator _offsetCalculator = OffsetCalculator();
+  bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
   late StreamSubscription<Duration> _positionSubscription;
 
@@ -35,7 +37,6 @@ class _AudioPageState extends State<AudioPage> {
         _audioStartTime = DateTime.now().subtract(event);
       });
     });
-    _playAudio();
   }
 
   @override
@@ -45,43 +46,45 @@ class _AudioPageState extends State<AudioPage> {
     super.dispose();
   }
 
-  Future<void> _playAudio() async {
-    const url = 'http://10.249.45.98/songs/1';
-    await playAudio(_audioPlayer, url);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color bgColor = colorScheme.primary.withOpacity(0.1);
+
     int lastDelay = _offsetCalculator.lastDelay;
     int avgDelay = _offsetCalculator.avgDelay;
     var offsetProvider = Provider.of<OffsetProvider>(context);
+    var songsProvider = Provider.of<SongsProvider>(context);
 
     Future<void> setDelay() async {
+      if (!_isAudioPlaying) {
+        return;
+      }
       setState(() {
         _offsetCalculator.setDelay(elapsedTime);
       });
       await offsetProvider.setAudioOffset(_offsetCalculator.avgDelay);
     }
 
-    return Listener(
-      onPointerDown: (event) async {
-        await setDelay();
+    return RawKeyboardListener(
+      focusNode: FocusNode(),
+      autofocus: true,
+      onKey: (RawKeyEvent event) async {
+        if (event is RawKeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.space) {
+          await setDelay();
+        }
       },
-      child: RawKeyboardListener(
-        focusNode: FocusNode(),
-        autofocus: true,
-        onKey: (RawKeyEvent event) async {
-          if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.space) {
-            await setDelay();
-          }
-        },
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Listener(
+              onPointerDown: (event) async {
+                await setDelay();
+              },
               child: Container(
-                color: Colors.white,
+                color: Colors.transparent,
                 child: const Center(
                   child: Text(
                     "请跟随乐曲节奏点击空格或鼠标",
@@ -90,30 +93,51 @@ class _AudioPageState extends State<AudioPage> {
                 ),
               ),
             ),
-            Expanded(
-              flex: 1,
-              child: Container(
-                color: Colors.grey[200],
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "上次延迟: $lastDelay ms",
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      Text(
-                        "平均延迟: $avgDelay ms",
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ],
-                  ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              color: bgColor,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ButtonBar(
+                      alignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (_isAudioPlaying) {
+                              _isAudioPlaying = false;
+                              _audioPlayer.pause();
+                            } else {
+                              _isAudioPlaying = true;
+                              final url =
+                                  'http://10.249.45.98/songs/${songsProvider.id}';
+                              _offsetCalculator.setBpm(songsProvider.bpm);
+                              _offsetCalculator.setOffset(songsProvider.offset);
+                              await playAudio(_audioPlayer, url);
+                            }
+                          },
+                          child: Text(_isAudioPlaying ? "暂停" : "播放"),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      "上次延迟: $lastDelay ms",
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    Text(
+                      "平均延迟: $avgDelay ms",
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
