@@ -90,7 +90,7 @@ class ChartsProvider with ChangeNotifier {
 
   void deleteNoteAt(double time) {
     _level?.notes
-        .removeWhere((element) => (time - element.p / 44.1).abs() < 0.3);
+        .removeWhere((element) => (time - element.p / 44.1).abs() < 300);
     notifyListeners();
   }
 
