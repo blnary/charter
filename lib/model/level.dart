@@ -25,6 +25,8 @@ class LevelProvider with ChangeNotifier {
       notes: [],
     );
     _level = result;
+    _id = null;
+    notifyListeners();
   }
 
   void setLevel(Level level, int id) {
