@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:charter/model/level.dart';
+import 'package:charter/model/chart.dart';
 import 'package:charter/model/song.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -69,8 +69,8 @@ class _CharterPageState extends State<CharterPage> {
 
     final offsetProvider = Provider.of<OffsetProvider>(context);
     final songsProvider = Provider.of<SongsProvider>(context);
-    final levelProvider = Provider.of<LevelProvider>(context);
-    final level = levelProvider.level;
+    final chartsProvider = Provider.of<ChartsProvider>(context);
+    final level = chartsProvider.level;
     if (level == null) {
       // TOOD create level button
       return const Center(child: Text("请选定关卡"));
