@@ -1,3 +1,4 @@
+import 'package:charter/model/level.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -37,6 +38,7 @@ class _SongsPageState extends State<SongsPage> {
     final Color selectedColor = colorScheme.primary.withOpacity(0.50);
     final Color evenItemColor = colorScheme.primary.withOpacity(0.15);
 
+    final levelProvider = Provider.of<LevelProvider>(context);
     final songsProvider = Provider.of<SongsProvider>(context);
     if (songsProvider.loading) {
       return const Center(child: CircularProgressIndicator());
@@ -185,6 +187,8 @@ class _SongsPageState extends State<SongsPage> {
               return ListTile(
                 onTap: () {
                   songsProvider.select(index);
+                  // TODO use double for all offsets
+                  levelProvider.initLevel(song.bpm, song.offset);
                 },
                 tileColor: isSelected
                     ? selectedColor

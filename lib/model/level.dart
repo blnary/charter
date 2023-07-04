@@ -7,7 +7,7 @@ class LevelProvider with ChangeNotifier {
   Level? get level => _level;
   int? get id => _id;
 
-  Level initLevel(double bpm, int offset) {
+  void initLevel(double bpm, int offset) {
     int offsetSamp = offset * 441 ~/ 10;
     Level result = Level(
       id: 0,
@@ -25,7 +25,6 @@ class LevelProvider with ChangeNotifier {
       notes: [],
     );
     _level = result;
-    return result;
   }
 
   void setLevel(Level level, int id) {
