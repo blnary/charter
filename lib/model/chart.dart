@@ -54,7 +54,7 @@ class ChartsProvider with ChangeNotifier {
   }
 
   void initLevel(double bpm, double offsetMs) {
-    int offsetSamp = offsetMs * 441 ~/ 10;
+    int offsetSamp = (offsetMs * 44.1).round();
     _level = Level(
       id: 0,
       name: 'Untitled',
@@ -76,9 +76,14 @@ class ChartsProvider with ChangeNotifier {
 
   void addAlignedNoteAt(double time, Direction dir, int strength, int decimal) {
     if (_level == null) return;
-    double unit = 60000 / _level!.bpm / decimal;
+    double bpm = _level!.bpm;
+    double unit = 60000 / bpm / decimal;
     double offsetMs = _level!.offsetSamp / 44.1;
-    double alignedTime = ((time - offsetMs) / unit).round() * unit + offsetMs;
+    double unitCount = (time - offsetMs) / unit;
+    double delay = (unitCount - unitCount.round()) * unit;
+    print(
+        "delay: ${delay.toInt()}, unit: ${unit.toInt()}, bpm: ${bpm.toInt()}");
+    double alignedTime = unitCount.round() * unit + offsetMs;
     addNoteAt(alignedTime, dir, strength);
   }
 

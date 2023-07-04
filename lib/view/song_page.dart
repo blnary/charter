@@ -45,7 +45,7 @@ class _SongsPageState extends State<SongsPage> {
     } else if (songsProvider.failed) {
       return Center(child: Text(songsProvider.failureMessage));
     } else {
-      final offset = songsProvider.offset;
+      final offset = songsProvider.offsetMs;
       final bpm = songsProvider.bpm;
 
       Future<void> showSettingDialog() async {

@@ -83,7 +83,7 @@ class _AudioPageState extends State<AudioPage> {
         final url = 'http://10.249.45.98${songsProvider.location}';
         await _audioPlayer.play(UrlSource(url));
         _offsetCalculator.setBpm(songsProvider.bpm);
-        _offsetCalculator.setOffset(songsProvider.offset);
+        _offsetCalculator.setOffsetMs(songsProvider.offsetMs);
         var duration = await _audioPlayer.getDuration();
         if (duration != null) {
           _audioLength = duration;
