@@ -167,4 +167,14 @@ class SongsProvider with ChangeNotifier {
     _selected = index;
     notifyListeners();
   }
+
+  void selectFromID(int id) {
+    for (var i = 0; i < _songs.length; i++) {
+      if (_songs[i].id == id) {
+        _selected = i;
+        notifyListeners();
+        return;
+      }
+    }
+  }
 }

@@ -1,10 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 class LevelProvider with ChangeNotifier {
   Level? _level;
+  int? _id;
+
   Level? get level => _level;
+  int? get id => _id;
 
   Level initLevel(double bpm, int offset) {
     int offsetSamp = offset * 441 ~/ 10;
@@ -27,8 +28,9 @@ class LevelProvider with ChangeNotifier {
     return result;
   }
 
-  void setLevel(String level) {
-    _level = Level.fromJson(jsonDecode(level));
+  void setLevel(Level level, int id) {
+    _level = level;
+    _id = id;
     notifyListeners();
   }
 }
