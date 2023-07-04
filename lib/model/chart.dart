@@ -77,18 +77,21 @@ class ChartsProvider with ChangeNotifier {
   void addAlignedNoteAt(double time, Direction dir, int strength, int decimal) {
     if (_level == null) return;
     double unit = 60000 / _level!.bpm / decimal;
-    double alignedTime = (time / unit).round() * unit;
+    double alignedTime =
+        ((time - _level!.offset) / unit).round() * unit + _level!.offset;
     addNoteAt(alignedTime, dir, strength);
   }
 
   void addNoteAt(double time, Direction dir, int strength) {
     _level?.notes.add(Note(
         id: _levelNotes, p: (time * 44.1).round(), d: toInt(dir), s: strength));
+    notifyListeners();
   }
 
   void deleteNoteAt(double time) {
     _level?.notes
         .removeWhere((element) => (time - element.p / 44.1).abs() < 0.3);
+    notifyListeners();
   }
 
   Future<String> create(int songId) async {
