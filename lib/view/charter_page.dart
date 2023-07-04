@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:charter/model/song.dart';
-import 'package:charter/util/song_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +31,11 @@ class _CharterPageState extends State<CharterPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
+  Duration _audioPosition = Duration.zero;
+  double _sliderValue = 0;
+  Duration _audioLength = const Duration(minutes: 1);
   late StreamSubscription<Duration> _positionSubscription;
+  bool _stoppedBySlider = false;
 
   int get elapsedTime {
     final currentTime = DateTime.now();
@@ -45,7 +48,9 @@ class _CharterPageState extends State<CharterPage> {
     super.initState();
     _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
       setState(() {
+        _audioPosition = event;
         _audioStartTime = DateTime.now().subtract(event);
+        _sliderValue = event.inMilliseconds / _audioLength.inMilliseconds;
       });
     });
   }
@@ -60,6 +65,7 @@ class _CharterPageState extends State<CharterPage> {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color primColor = colorScheme.primary;
     final Color mainColor = colorScheme.primary.withOpacity(0.5);
     final Color bgColor = colorScheme.primary.withOpacity(0.1);
 
@@ -110,6 +116,7 @@ class _CharterPageState extends State<CharterPage> {
                         "D 左 F 下 J 上 K 右 Space 中",
                         style: TextStyle(fontSize: 20),
                       ),
+                      // TODO make everything avaliable with keyboard
                       Text(
                         "输入延迟：${offsetProvider.inputOffset}ms",
                         style: const TextStyle(fontSize: 20),
@@ -123,21 +130,67 @@ class _CharterPageState extends State<CharterPage> {
                         children: [
                           ElevatedButton(
                             onPressed: () async {
+                              await _audioPlayer.seek(_audioPosition -
+                                  const Duration(milliseconds: 1000));
+                            },
+                            child: const Tab(icon: Icon(Icons.replay_10_sharp)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
                               if (_isAudioPlaying) {
                                 _isAudioPlaying = false;
                                 _audioPlayer.pause();
                               } else {
                                 _isAudioPlaying = true;
                                 final url =
-                                    'http://10.249.45.98/songs/${songsProvider.id}';
-                                await playAudio(_audioPlayer, url);
+                                    'http://10.249.45.98${songsProvider.location}';
+                                await _audioPlayer.play(UrlSource(url));
+                                var duration = await _audioPlayer.getDuration();
+                                if (duration != null) {
+                                  _audioLength = duration;
+                                }
                               }
                             },
                             child: _isAudioPlaying
-                                ? const Tab(icon: Icon(Icons.pause))
-                                : const Tab(icon: Icon(Icons.play_arrow)),
+                                ? const Tab(icon: Icon(Icons.pause_sharp))
+                                : const Tab(icon: Icon(Icons.play_arrow_sharp)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              await _audioPlayer.seek(_audioPosition +
+                                  const Duration(milliseconds: 1000));
+                            },
+                            child:
+                                const Tab(icon: Icon(Icons.forward_10_sharp)),
                           ),
                         ],
+                      ),
+                      Slider(
+                        autofocus: false,
+                        value: _sliderValue.clamp(0, 1),
+                        min: 0,
+                        activeColor: primColor,
+                        max: 1,
+                        onChangeEnd: (double value) async {
+                          if (_stoppedBySlider) {
+                            await _audioPlayer.resume();
+                          }
+                        },
+                        onChangeStart: (double value) async {
+                          _stoppedBySlider = _isAudioPlaying;
+                          if (_isAudioPlaying) {
+                            _isAudioPlaying = false;
+                            await _audioPlayer.pause();
+                          }
+                        },
+                        onChanged: (val) async {
+                          setState(() {
+                            _sliderValue = val;
+                          });
+                          await _audioPlayer.seek(Duration(
+                              milliseconds:
+                                  (_audioLength.inMilliseconds * val).toInt()));
+                        },
                       ),
                     ],
                   ),
