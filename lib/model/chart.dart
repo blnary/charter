@@ -74,6 +74,13 @@ class ChartsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void addAlignedNoteAt(double time, Direction dir, int strength, int decimal) {
+    if (_level == null) return;
+    double unit = 60000 / _level!.bpm / decimal;
+    double alignedTime = (time / unit).round() * unit;
+    addNoteAt(alignedTime, dir, strength);
+  }
+
   void addNoteAt(double time, Direction dir, int strength) {
     _level?.notes.add(Note(
         id: _levelNotes, p: (time * 44.1).round(), d: toInt(dir), s: strength));
