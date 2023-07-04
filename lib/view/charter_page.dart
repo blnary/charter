@@ -82,8 +82,8 @@ class _CharterPageState extends State<CharterPage> {
     final offsetProvider = Provider.of<OffsetProvider>(context);
     final songsProvider = Provider.of<SongsProvider>(context);
     final chartsProvider = Provider.of<ChartsProvider>(context);
-    final displayTime = elapsedTime - offsetProvider.audioOffset;
-    final inputTime = displayTime - offsetProvider.inputOffset;
+    final displayTime =
+        elapsedTime - offsetProvider.audioOffset + offsetProvider.inputOffset;
     final level = chartsProvider.level;
     if (level == null) {
       return const Center(child: Text("请选定关卡"));
@@ -136,7 +136,12 @@ class _CharterPageState extends State<CharterPage> {
     ));
 
     void addAlignedNote(Direction d) {
-      chartsProvider.addAlignedNoteAt(inputTime, d, _strength, _decimal);
+      chartsProvider.addAlignedNoteAt(
+          elapsedTime - offsetProvider.audioOffset, d, _strength, _decimal);
+    }
+
+    void deleteNote() {
+      chartsProvider.deleteNoteAt(elapsedTime - offsetProvider.audioOffset);
     }
 
     Future<void> switchAudio() async {
@@ -180,7 +185,7 @@ class _CharterPageState extends State<CharterPage> {
                 addAlignedNote(Direction.center);
                 break;
               case LogicalKeyboardKey.keyX:
-                chartsProvider.deleteNoteAt(inputTime);
+                deleteNote();
                 break;
               case LogicalKeyboardKey.space:
                 await switchAudio();

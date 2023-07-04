@@ -46,7 +46,7 @@ class SongsProvider with ChangeNotifier {
   String get name => songs[_selected].name;
   String get location => songs[_selected].location;
   double get bpm => songs[_selected].bpm;
-  double get offset => songs[_selected].offsetMs;
+  double get offsetMs => songs[_selected].offsetMs;
 
   SongsProvider() {
     fetch();
