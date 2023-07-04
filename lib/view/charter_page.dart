@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:charter/model/offset.dart';
 
-const int period = 500;
+const double period = 500;
 const double spanStart = -1;
 const double spanEnd = 0.6;
 
@@ -32,13 +32,13 @@ class _CharterPageState extends State<CharterPage> {
   int _decimal = 4;
   late StreamSubscription<Duration> _positionSubscription;
 
-  int get elapsedTime {
+  double get elapsedTime {
     if (!_isAudioPlaying) {
-      return _audioPosition.inMilliseconds;
+      return _audioPosition.inMicroseconds / 1000;
     }
     final currentTime = DateTime.now();
     final difference = currentTime.difference(_audioStartTime);
-    return difference.inMilliseconds;
+    return difference.inMicroseconds / 1000;
   }
 
   @override
@@ -156,11 +156,11 @@ class _CharterPageState extends State<CharterPage> {
                       ),
                       // TODO make everything avaliable with keyboard
                       Text(
-                        "输入延迟：${offsetProvider.inputOffset}ms",
+                        "输入延迟：${offsetProvider.inputOffset.round()} ms",
                         style: const TextStyle(fontSize: 20),
                       ),
                       Text(
-                        "音频延迟：${offsetProvider.audioOffset}ms",
+                        "音频延迟：${offsetProvider.audioOffset.round()} ms",
                         style: const TextStyle(fontSize: 20),
                       ),
                       ButtonBar(
@@ -300,18 +300,18 @@ class _NoteState extends State<Note> {
     super.dispose();
   }
 
-  int get elapsedTime {
+  double get elapsedTime {
     if (!widget.isAudioPlaying) {
-      return widget.audioPosition.inMilliseconds;
+      return widget.audioPosition.inMicroseconds / 1000;
     }
     final currentTime = DateTime.now();
     final difference = currentTime.difference(widget.audioStartTime);
-    return difference.inMilliseconds;
+    return difference.inMicroseconds / 1000;
   }
 
   @override
   Widget build(BuildContext context) {
-    final int delta = elapsedTime - widget.startTime.inMilliseconds;
+    final double delta = elapsedTime - widget.startTime.inMicroseconds / 1000;
     final double posNote = getPosOf(delta);
     if (widget.isLine) {
       final opacity = widget.isMainLine ? 0.05 : 0.02;
@@ -337,7 +337,7 @@ class _NoteState extends State<Note> {
   }
 }
 
-double getPosOf(int time) {
+double getPosOf(double time) {
   return time / period * (spanEnd - spanStart) + spanEnd;
 }
 
