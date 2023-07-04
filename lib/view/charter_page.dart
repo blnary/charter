@@ -81,19 +81,21 @@ class _CharterPageState extends State<CharterPage> {
     final offsetProvider = Provider.of<OffsetProvider>(context);
     final songsProvider = Provider.of<SongsProvider>(context);
     final chartsProvider = Provider.of<ChartsProvider>(context);
+    final displayTime = elapsedTime - offsetProvider.audioOffset;
+    final inputTime = displayTime - offsetProvider.inputOffset;
     final level = chartsProvider.level;
     if (level == null) {
-      // TOOD create level button
       return const Center(child: Text("请选定关卡"));
     }
 
+    // Render notes
     final mspb = 60000 / level.bpm;
     final offset = level.offsetSamp / 44.1;
-    final lastBeat = ((elapsedTime - offset) / mspb).round() * mspb + offset;
+    final lastBeat = ((displayTime - offset) / mspb).round() * mspb + offset;
     final notes = level.notes
         .map<Widget?>((e) {
           final startTime = Duration(milliseconds: e.p ~/ 44.1);
-          final diff = e.p ~/ 44.1 - elapsedTime;
+          final diff = e.p / 44.1 - displayTime;
           if (diff > period * 3 || diff < -period * 3) {
             return null;
           }
@@ -111,7 +113,7 @@ class _CharterPageState extends State<CharterPage> {
     notes.addAll(range(-32, 32).map<Widget?>((e) {
       final timeMs = lastBeat + e * mspb / _decimal;
       final startTime = Duration(milliseconds: timeMs.round());
-      final diff = timeMs - elapsedTime;
+      final diff = timeMs - displayTime;
       if (diff > period * 3 || diff < -period * 3) {
         return null;
       }
@@ -133,7 +135,7 @@ class _CharterPageState extends State<CharterPage> {
     ));
 
     void addAlignedNote(Direction d) {
-      chartsProvider.addAlignedNoteAt(elapsedTime, d, _strength, _decimal);
+      chartsProvider.addAlignedNoteAt(inputTime, d, _strength, _decimal);
     }
 
     Future<void> switchAudio() async {
@@ -177,7 +179,7 @@ class _CharterPageState extends State<CharterPage> {
                 addAlignedNote(Direction.center);
                 break;
               case LogicalKeyboardKey.keyX:
-                chartsProvider.deleteNoteAt(elapsedTime);
+                chartsProvider.deleteNoteAt(inputTime);
                 break;
               case LogicalKeyboardKey.space:
                 await switchAudio();
@@ -392,7 +394,7 @@ class _NoteState extends State<Note> {
   @override
   void initState() {
     super.initState();
-    _ticker = Ticker((elapsed) {
+    _ticker = Ticker((_) {
       setState(() {});
     });
     _ticker.start();
@@ -415,8 +417,10 @@ class _NoteState extends State<Note> {
 
   @override
   Widget build(BuildContext context) {
-    final double delta = elapsedTime - widget.startTime.inMicroseconds / 1000;
-    final double posNote = getPosOf(delta);
+    final offsetProvider = Provider.of<OffsetProvider>(context);
+    final displayTime = elapsedTime - offsetProvider.audioOffset;
+    final delta = displayTime - widget.startTime.inMicroseconds / 1000;
+    final posNote = getPosOf(delta);
     if (widget.isLine) {
       final opacity = widget.isMainLine ? 0.05 : 0.02;
       return Align(
