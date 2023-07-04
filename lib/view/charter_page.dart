@@ -9,9 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:charter/model/offset.dart';
 
-const double period = 500;
+const double period = 400;
 const double spanStart = -1;
-const double spanEnd = 0.6;
+const double spanEnd = 0;
 
 class CharterPage extends StatefulWidget {
   const CharterPage({Key? key}) : super(key: key);
@@ -121,14 +121,35 @@ class _CharterPageState extends State<CharterPage> {
       ),
     ));
 
+    void addAlignedNote(Direction d) {
+      chartsProvider.addAlignedNoteAt(elapsedTime, d, 1, _decimal);
+    }
+
     return Listener(
       onPointerDown: (event) async {},
       child: RawKeyboardListener(
         focusNode: FocusNode(),
         autofocus: true,
         onKey: (RawKeyEvent event) async {
-          if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.space) {}
+          if (event is RawKeyDownEvent) {
+            switch (event.logicalKey) {
+              case LogicalKeyboardKey.keyD:
+                addAlignedNote(Direction.left);
+                break;
+              case LogicalKeyboardKey.keyF:
+                addAlignedNote(Direction.down);
+                break;
+              case LogicalKeyboardKey.keyJ:
+                addAlignedNote(Direction.up);
+                break;
+              case LogicalKeyboardKey.keyK:
+                addAlignedNote(Direction.right);
+                break;
+              case LogicalKeyboardKey.keyG:
+                addAlignedNote(Direction.center);
+                break;
+            }
+          }
         },
         child: Row(
           children: [
@@ -151,7 +172,7 @@ class _CharterPageState extends State<CharterPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "D 左 F 下 J 上 K 右 Space 中",
+                        "D 左 F 下 J 上 K 右 G 中",
                         style: TextStyle(fontSize: 20),
                       ),
                       // TODO make everything avaliable with keyboard
