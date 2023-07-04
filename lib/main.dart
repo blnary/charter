@@ -1,5 +1,4 @@
 import 'package:charter/model/chart.dart';
-import 'package:charter/model/level.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import './model/song.dart';
@@ -12,7 +11,6 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => SongsProvider()),
         ChangeNotifierProvider(create: (_) => ChartsProvider()),
-        ChangeNotifierProvider(create: (_) => LevelProvider()),
         ChangeNotifierProvider(create: (_) => OffsetProvider()),
       ],
       child: const MyApp(),
