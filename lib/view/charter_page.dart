@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:charter/model/level.dart';
 import 'package:charter/model/song.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -8,17 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:charter/model/offset.dart';
 
-const int period = 1000;
-const int pressIndTime = 320;
-const double spanStart = -2;
+const int period = 500;
+const double spanStart = -1;
 const double spanEnd = 0.6;
-
-double getPosOf(int time) {
-  return (time / period * (spanEnd - spanStart) - (1 - spanEnd)) %
-          (spanEnd - spanStart) +
-      (1 - spanEnd) +
-      spanStart;
-}
 
 class CharterPage extends StatefulWidget {
   const CharterPage({Key? key}) : super(key: key);
@@ -29,15 +22,20 @@ class CharterPage extends StatefulWidget {
 
 class _CharterPageState extends State<CharterPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final TextEditingController _decimalController =
+      TextEditingController(text: "4");
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
   Duration _audioPosition = Duration.zero;
   double _sliderValue = 0;
   Duration _audioLength = const Duration(minutes: 1);
+  int _decimal = 4;
   late StreamSubscription<Duration> _positionSubscription;
-  bool _stoppedBySlider = false;
 
   int get elapsedTime {
+    if (!_isAudioPlaying) {
+      return _audioPosition.inMilliseconds;
+    }
     final currentTime = DateTime.now();
     final difference = currentTime.difference(_audioStartTime);
     return difference.inMilliseconds;
@@ -69,8 +67,59 @@ class _CharterPageState extends State<CharterPage> {
     final Color mainColor = colorScheme.primary.withOpacity(0.5);
     final Color bgColor = colorScheme.primary.withOpacity(0.1);
 
-    var offsetProvider = Provider.of<OffsetProvider>(context);
-    var songsProvider = Provider.of<SongsProvider>(context);
+    final offsetProvider = Provider.of<OffsetProvider>(context);
+    final songsProvider = Provider.of<SongsProvider>(context);
+    final levelProvider = Provider.of<LevelProvider>(context);
+    final level = levelProvider.level;
+    if (level == null) {
+      // TOOD create level button
+      return const Center(child: Text("请选定关卡"));
+    }
+
+    final mspb = 60000 / level.bpm;
+    final offset = level.offset / 44.1;
+    final lastBeat = ((elapsedTime - offset) / mspb).round() * mspb + offset;
+    final notes = level.notes
+        .map<Widget?>((e) {
+          final startTime = Duration(milliseconds: e.p ~/ 44.1);
+          final diff = e.p ~/ 44.1 - elapsedTime;
+          if (diff > period * 3 || diff < -period * 3) {
+            return null;
+          }
+          return Note(
+            startTime: startTime,
+            audioStartTime: _audioStartTime,
+            audioPosition: _audioPosition,
+            isAudioPlaying: _isAudioPlaying,
+            direction: fromInt(e.d),
+            strength: e.s,
+          );
+        })
+        .whereType<Widget>()
+        .toList();
+    notes.addAll(range(-32, 32).map<Widget?>((e) {
+      final timeMs = lastBeat + e * mspb / _decimal;
+      final startTime = Duration(milliseconds: timeMs.round());
+      final diff = timeMs - elapsedTime;
+      if (diff > period * 3 || diff < -period * 3) {
+        return null;
+      }
+      return Note(
+        startTime: startTime,
+        audioStartTime: _audioStartTime,
+        audioPosition: _audioPosition,
+        isAudioPlaying: _isAudioPlaying,
+        isLine: true,
+        isMainLine: e % _decimal == 0,
+      );
+    }).whereType<Widget>());
+    notes.add(Align(
+      alignment: const Alignment(0, spanEnd),
+      child: Container(
+        height: 6,
+        color: mainColor,
+      ),
+    ));
 
     return Listener(
       onPointerDown: (event) async {},
@@ -88,18 +137,7 @@ class _CharterPageState extends State<CharterPage> {
               child: Container(
                 color: Colors.transparent,
                 child: Stack(
-                  children: [
-                    Align(
-                      alignment: const Alignment(0, spanEnd),
-                      child: Container(
-                        height: 4,
-                        color: mainColor,
-                      ),
-                    ),
-                    Note(
-                      startTime: _audioStartTime,
-                    ),
-                  ],
+                  children: notes,
                 ),
               ),
             ),
@@ -171,18 +209,6 @@ class _CharterPageState extends State<CharterPage> {
                         min: 0,
                         activeColor: primColor,
                         max: 1,
-                        onChangeEnd: (double value) async {
-                          if (_stoppedBySlider) {
-                            await _audioPlayer.resume();
-                          }
-                        },
-                        onChangeStart: (double value) async {
-                          _stoppedBySlider = _isAudioPlaying;
-                          if (_isAudioPlaying) {
-                            _isAudioPlaying = false;
-                            await _audioPlayer.pause();
-                          }
-                        },
                         onChanged: (val) async {
                           setState(() {
                             _sliderValue = val;
@@ -191,6 +217,32 @@ class _CharterPageState extends State<CharterPage> {
                               milliseconds:
                                   (_audioLength.inMilliseconds * val).toInt()));
                         },
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: TextField(
+                          controller: _decimalController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: '分母',
+                          ),
+                          onChanged: (value) {
+                            try {
+                              final decimal = int.parse(value);
+                              if (decimal <= 0) {
+                                throw "分母必须大于 0";
+                              }
+                              setState(() {
+                                _decimal = decimal;
+                              });
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(e.toString()),
+                                      duration: const Duration(seconds: 1)));
+                            }
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -205,9 +257,26 @@ class _CharterPageState extends State<CharterPage> {
 }
 
 class Note extends StatefulWidget {
-  final DateTime startTime;
+  final DateTime audioStartTime;
+  final Duration audioPosition;
+  final Duration startTime;
+  final bool isAudioPlaying;
+  final int strength;
+  final Direction direction;
+  final bool isLine;
+  final bool isMainLine;
 
-  const Note({Key? key, required this.startTime}) : super(key: key);
+  const Note(
+      {Key? key,
+      required this.startTime,
+      required this.audioStartTime,
+      required this.audioPosition,
+      required this.isAudioPlaying,
+      this.strength = 0,
+      this.direction = Direction.center,
+      this.isLine = false,
+      this.isMainLine = false})
+      : super(key: key);
 
   @override
   State createState() => _NoteState();
@@ -232,24 +301,94 @@ class _NoteState extends State<Note> {
   }
 
   int get elapsedTime {
+    if (!widget.isAudioPlaying) {
+      return widget.audioPosition.inMilliseconds;
+    }
     final currentTime = DateTime.now();
-    final difference = currentTime.difference(widget.startTime);
+    final difference = currentTime.difference(widget.audioStartTime);
     return difference.inMilliseconds;
   }
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final Color noteColor = colorScheme.primary.withOpacity(0.8);
-
-    double posNote = getPosOf(elapsedTime);
+    final int delta = elapsedTime - widget.startTime.inMilliseconds;
+    final double posNote = getPosOf(delta);
+    if (widget.isLine) {
+      final opacity = widget.isMainLine ? 0.05 : 0.02;
+      return Align(
+        alignment: Alignment(0, posNote),
+        child: Container(
+          height: 6,
+          color: Colors.black.withOpacity(opacity),
+        ),
+      );
+    }
+    final color = strengthToColor(widget.strength);
     return Align(
-      alignment: Alignment(0, posNote),
+      alignment: Alignment(toAlign(widget.direction), posNote),
       child: Container(
-        height: 4,
+        height: 6,
         width: 128,
-        color: noteColor,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(6),
+        ),
       ),
     );
+  }
+}
+
+double getPosOf(int time) {
+  return time / period * (spanEnd - spanStart) + spanEnd;
+}
+
+enum Direction {
+  center,
+  up,
+  down,
+  left,
+  right,
+}
+
+int toInt(Direction direction) {
+  return direction.index;
+}
+
+Direction fromInt(int value) {
+  return Direction.values[value];
+}
+
+double toAlign(Direction direction) {
+  const unit = 0.4;
+  switch (direction) {
+    case Direction.center:
+      return 0;
+    case Direction.left:
+      return -unit * 2;
+    case Direction.down:
+      return -unit;
+    case Direction.up:
+      return unit;
+    case Direction.right:
+      return unit * 2;
+  }
+}
+
+Color strengthToColor(int strength) {
+  switch (strength) {
+    case 1:
+      return Colors.lightGreen;
+    case 2:
+      return Colors.lightBlue;
+    case 3:
+      return Colors.red;
+    default:
+      return Colors.black;
+  }
+}
+
+Iterable<int> range(int start, int end, {int step = 1}) sync* {
+  for (int i = start; i < end; i += step) {
+    yield i;
   }
 }
