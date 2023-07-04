@@ -50,15 +50,14 @@ class _ChartsPageState extends State<ChartsPage> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        levelProvider.setLevel(
-                            chartsProvider.level, chartsProvider.id);
+                        // Does nothing
                         ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text("成功同步谱面！"),
+                                content: Text("成功选定谱面！"),
                                 duration: Duration(seconds: 1)));
                       },
-                      child:
-                          const Tab(icon: Icon(Icons.sync_sharp), text: "同步"),
+                      child: const Tab(
+                          icon: Icon(Icons.hdr_on_select_sharp), text: "选定"),
                     ),
                   ],
                 ),
@@ -77,6 +76,8 @@ class _ChartsPageState extends State<ChartsPage> {
                 onTap: () {
                   chartsProvider.select(index);
                   songsProvider.selectFromID(chart.songId);
+                  levelProvider.setLevel(
+                      chartsProvider.level, chartsProvider.id);
                 },
                 tileColor: isSelected
                     ? selectedColor

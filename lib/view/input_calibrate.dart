@@ -167,6 +167,7 @@ class _NoteState extends State<Note> {
     final Color noteColor = colorScheme.primary.withOpacity(0.8);
 
     double posNote = getPosOf(elapsedTime);
+    // TODO optimize style
     return Align(
       alignment: Alignment(0, posNote),
       child: Container(
