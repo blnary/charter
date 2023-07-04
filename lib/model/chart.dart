@@ -1,22 +1,23 @@
 import 'dart:convert';
+import 'package:charter/model/level.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class Chart {
   int id;
-  String content;
+  Level level;
   int songId;
 
   Chart({
     required this.id,
-    required this.content,
+    required this.level,
     required this.songId,
   });
 
   factory Chart.fromJson(Map<String, dynamic> json) {
     return Chart(
       id: json['id'] as int,
-      content: json['content'] as String,
+      level: Level.fromJson(jsonDecode(json['content'] as String)),
       songId: json['song_id'] as int,
     );
   }
@@ -24,7 +25,7 @@ class Chart {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'content': content,
+      'content': level,
       'song_id': songId,
     };
   }
@@ -43,7 +44,7 @@ class ChartsProvider with ChangeNotifier {
   String get failureMessage => _failureMessage;
   int get selected => _selected;
   int get id => charts[_selected].id;
-  String get content => charts[_selected].content;
+  Level get level => charts[_selected].level;
 
   ChartsProvider() {
     fetch();
@@ -74,10 +75,10 @@ class ChartsProvider with ChangeNotifier {
     }
   }
 
-  Future<String> create(int songId, String content) async {
+  Future<String> create(int songId, Level level) async {
     try {
       const url = 'http://10.249.45.98/charts';
-      final jsonData = Chart(id: 0, songId: songId, content: content).toJson();
+      final jsonData = Chart(id: 0, songId: songId, level: level).toJson();
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -92,11 +93,11 @@ class ChartsProvider with ChangeNotifier {
     return '成功设置！';
   }
 
-  Future<String> set(int id, String content) async {
+  Future<String> set(int id, Level level) async {
     try {
       final url = 'http://10.249.45.98/charts/$id';
-      String oldContent = _charts[id].content;
-      _charts[id].content = content;
+      Level oldContent = _charts[id].level;
+      _charts[id].level = level;
       final jsonData = _charts[id].toJson();
       final response = await http.post(
         Uri.parse(url),
@@ -104,7 +105,7 @@ class ChartsProvider with ChangeNotifier {
         body: json.encode(jsonData),
       );
       if (response.statusCode != 200) {
-        _charts[id].content = oldContent;
+        _charts[id].level = oldContent;
         throw Exception('设置失败: ${response.statusCode}');
       }
     } catch (error) {

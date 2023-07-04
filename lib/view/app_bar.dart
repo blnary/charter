@@ -1,3 +1,4 @@
+import 'package:charter/view/chart_page.dart';
 import 'package:charter/view/charter_page.dart';
 import 'package:charter/view/song_page.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ List<String> titles = <String>[
   '输入校正',
   '音频校正',
   '歌曲选择',
+  '谱面选择',
   '谱面编辑',
 ];
 
@@ -18,7 +20,7 @@ class AppBarExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const int tabsCount = 4;
+    const int tabsCount = 5;
 
     return DefaultTabController(
       initialIndex: 0,
@@ -57,8 +59,12 @@ class AppBarExample extends StatelessWidget {
                 text: titles[2],
               ),
               Tab(
-                icon: const Icon(Icons.bar_chart_sharp),
+                icon: const Icon(Icons.autofps_select_sharp),
                 text: titles[3],
+              ),
+              Tab(
+                icon: const Icon(Icons.bar_chart_sharp),
+                text: titles[4],
               ),
             ],
           ),
@@ -68,6 +74,7 @@ class AppBarExample extends StatelessWidget {
             InputPage(),
             AudioPage(),
             SongsPage(),
+            ChartsPage(),
             CharterPage(),
           ],
         ),
