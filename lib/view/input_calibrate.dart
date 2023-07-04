@@ -5,12 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:charter/model/offset.dart';
 import 'package:charter/util/offset_calculator.dart';
 
-const int period = 1000;
-const int pressIndTime = 320;
+const double period = 1000;
+const double pressIndTime = 320;
 const double spanStart = -2;
 const double spanEnd = 0.6;
 
-double getPosOf(int time) {
+double getPosOf(double time) {
   return (time / period * (spanEnd - spanStart) - (1 - spanEnd)) %
           (spanEnd - spanStart) +
       (1 - spanEnd) +
@@ -28,10 +28,10 @@ class _InputPageState extends State<InputPage> {
   final DateTime _startTime = DateTime.now();
   final OffsetCalculator _offsetCalculator = OffsetCalculator();
 
-  int get elapsedTime {
+  double get elapsedTime {
     final currentTime = DateTime.now();
     final difference = currentTime.difference(_startTime);
-    return difference.inMilliseconds;
+    return difference.inMicroseconds / 1000;
   }
 
   @override
@@ -40,9 +40,9 @@ class _InputPageState extends State<InputPage> {
     final Color mainColor = colorScheme.primary.withOpacity(0.5);
     final Color bgColor = colorScheme.primary.withOpacity(0.1);
 
-    int lastPressTime = _offsetCalculator.lastPressTime;
-    int lastDelay = _offsetCalculator.lastDelay;
-    int avgDelay = _offsetCalculator.avgDelay;
+    double lastPressTime = _offsetCalculator.lastPressTime;
+    double lastDelay = _offsetCalculator.lastDelay;
+    double avgDelay = _offsetCalculator.avgDelay;
     double posPress = getPosOf(lastPressTime);
     var offsetProvider = Provider.of<OffsetProvider>(context);
 
@@ -109,11 +109,11 @@ class _InputPageState extends State<InputPage> {
                         style: TextStyle(fontSize: 20),
                       ),
                       Text(
-                        "上次延迟: $lastDelay ms",
+                        "上次延迟: ${lastDelay.round()} ms",
                         style: const TextStyle(fontSize: 20),
                       ),
                       Text(
-                        "平均延迟: $avgDelay ms",
+                        "平均延迟: ${avgDelay.round()} ms",
                         style: const TextStyle(fontSize: 20),
                       ),
                     ],
@@ -155,10 +155,10 @@ class _NoteState extends State<Note> {
     super.dispose();
   }
 
-  int get elapsedTime {
+  double get elapsedTime {
     final currentTime = DateTime.now();
     final difference = currentTime.difference(widget.startTime);
-    return difference.inMilliseconds;
+    return difference.inMicroseconds / 1000;
   }
 
   @override

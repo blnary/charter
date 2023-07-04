@@ -22,10 +22,10 @@ class _AudioPageState extends State<AudioPage> {
   DateTime _audioStartTime = DateTime.now();
   late StreamSubscription<Duration> _positionSubscription;
 
-  int get elapsedTime {
+  double get elapsedTime {
     final currentTime = DateTime.now();
     final difference = currentTime.difference(_audioStartTime);
-    return difference.inMilliseconds;
+    return difference.inMicroseconds / 1000;
   }
 
   @override
@@ -49,8 +49,8 @@ class _AudioPageState extends State<AudioPage> {
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final Color bgColor = colorScheme.primary.withOpacity(0.1);
-    int lastDelay = _offsetCalculator.lastDelay;
-    int avgDelay = _offsetCalculator.avgDelay;
+    double lastDelay = _offsetCalculator.lastDelay;
+    double avgDelay = _offsetCalculator.avgDelay;
     var offsetProvider = Provider.of<OffsetProvider>(context);
     var songsProvider = Provider.of<SongsProvider>(context);
 
@@ -102,11 +102,11 @@ class _AudioPageState extends State<AudioPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      "上次延迟: $lastDelay ms",
+                      "上次延迟: ${lastDelay.round()} ms",
                       style: const TextStyle(fontSize: 20),
                     ),
                     Text(
-                      "平均延迟: $avgDelay ms",
+                      "平均延迟: ${avgDelay.round()} ms",
                       style: const TextStyle(fontSize: 20),
                     ),
                     ButtonBar(
