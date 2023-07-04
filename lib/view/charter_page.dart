@@ -24,6 +24,7 @@ class _CharterPageState extends State<CharterPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final TextEditingController _decimalController =
       TextEditingController(text: "4");
+  final FocusNode _focusNode = FocusNode();
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
   Duration _audioPosition = Duration.zero;
@@ -77,7 +78,7 @@ class _CharterPageState extends State<CharterPage> {
     }
 
     final mspb = 60000 / level.bpm;
-    final offset = level.offset / 44.1;
+    final offset = level.offsetSamp / 44.1;
     final lastBeat = ((elapsedTime - offset) / mspb).round() * mspb + offset;
     final notes = level.notes
         .map<Widget?>((e) {
@@ -126,9 +127,11 @@ class _CharterPageState extends State<CharterPage> {
     }
 
     return Listener(
-      onPointerDown: (event) async {},
+      onPointerDown: (event) async {
+        _focusNode.requestFocus();
+      },
       child: RawKeyboardListener(
-        focusNode: FocusNode(),
+        focusNode: _focusNode,
         autofocus: true,
         onKey: (RawKeyEvent event) async {
           if (event is RawKeyDownEvent) {
@@ -175,7 +178,6 @@ class _CharterPageState extends State<CharterPage> {
                         "D 左 F 下 J 上 K 右 G 中",
                         style: TextStyle(fontSize: 20),
                       ),
-                      // TODO make everything avaliable with keyboard
                       Text(
                         "输入延迟：${offsetProvider.inputOffset.round()} ms",
                         style: const TextStyle(fontSize: 20),
@@ -262,6 +264,9 @@ class _CharterPageState extends State<CharterPage> {
                                       content: Text(e.toString()),
                                       duration: const Duration(seconds: 1)));
                             }
+                          },
+                          onTapOutside: (_) {
+                            _focusNode.requestFocus();
                           },
                         ),
                       ),

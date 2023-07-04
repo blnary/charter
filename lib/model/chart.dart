@@ -59,7 +59,7 @@ class ChartsProvider with ChangeNotifier {
       id: 0,
       name: 'Untitled',
       bpm: bpm,
-      offset: offsetSamp,
+      offsetSamp: offsetSamp,
       startPos: offsetSamp,
       hardStartPos: offsetSamp,
       endPos: offsetSamp,
@@ -77,8 +77,8 @@ class ChartsProvider with ChangeNotifier {
   void addAlignedNoteAt(double time, Direction dir, int strength, int decimal) {
     if (_level == null) return;
     double unit = 60000 / _level!.bpm / decimal;
-    double alignedTime =
-        ((time - _level!.offset) / unit).round() * unit + _level!.offset;
+    double offsetMs = _level!.offsetSamp / 44.1;
+    double alignedTime = ((time - offsetMs) / unit).round() * unit + offsetMs;
     addNoteAt(alignedTime, dir, strength);
   }
 
@@ -155,7 +155,7 @@ class Level {
   String name;
   double bpm;
   int id;
-  int offset;
+  int offsetSamp;
   int startPos;
   int hardStartPos;
   int endPos;
@@ -170,7 +170,7 @@ class Level {
     required this.name,
     required this.bpm,
     required this.id,
-    required this.offset,
+    required this.offsetSamp,
     required this.startPos,
     required this.hardStartPos,
     required this.endPos,
@@ -187,7 +187,7 @@ class Level {
       name: json['name'] as String,
       bpm: json['bpm'] as double,
       id: json['id'] as int,
-      offset: json['offset'] as int,
+      offsetSamp: json['offset'] as int,
       startPos: json['startpos'] as int,
       hardStartPos: json['hardStartpos'] as int,
       endPos: json['endpos'] as int,
@@ -209,7 +209,7 @@ class Level {
       'name': name,
       'bpm': bpm,
       'id': id,
-      'offset': offset,
+      'offset': offsetSamp,
       'startpos': startPos,
       'hardStartpos': hardStartPos,
       'endpos': endPos,
