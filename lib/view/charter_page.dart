@@ -341,38 +341,6 @@ double getPosOf(double time) {
   return time / period * (spanEnd - spanStart) + spanEnd;
 }
 
-enum Direction {
-  center,
-  up,
-  down,
-  left,
-  right,
-}
-
-int toInt(Direction direction) {
-  return direction.index;
-}
-
-Direction fromInt(int value) {
-  return Direction.values[value];
-}
-
-double toAlign(Direction direction) {
-  const unit = 0.4;
-  switch (direction) {
-    case Direction.center:
-      return 0;
-    case Direction.left:
-      return -unit * 2;
-    case Direction.down:
-      return -unit;
-    case Direction.up:
-      return unit;
-    case Direction.right:
-      return unit * 2;
-  }
-}
-
 Color strengthToColor(int strength) {
   switch (strength) {
     case 1:

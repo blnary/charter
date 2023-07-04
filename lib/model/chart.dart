@@ -8,6 +8,7 @@ class ChartsProvider with ChangeNotifier {
   bool _failed = false;
   String _failureMessage = '';
 
+  int _levelNotes = 0;
   Level? _level;
   int? _selected;
 
@@ -73,6 +74,16 @@ class ChartsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void addNoteAt(double time, Direction dir, int strength) {
+    _level?.notes.add(Note(
+        id: _levelNotes, p: (time * 44.1).round(), d: toInt(dir), s: strength));
+  }
+
+  void deleteNoteAt(double time) {
+    _level?.notes
+        .removeWhere((element) => (time - element.p / 44.1).abs() < 0.3);
+  }
+
   Future<String> create(int songId) async {
     try {
       const url = 'http://10.249.45.98/charts';
@@ -125,6 +136,7 @@ class ChartsProvider with ChangeNotifier {
   void select(int index) {
     _selected = index;
     _level = _charts[index].level;
+    _levelNotes = _level!.notes.length;
     notifyListeners();
   }
 }
@@ -254,6 +266,38 @@ class Note {
       'd': d,
       's': s,
     };
+  }
+}
+
+enum Direction {
+  center,
+  up,
+  down,
+  left,
+  right,
+}
+
+int toInt(Direction direction) {
+  return direction.index;
+}
+
+Direction fromInt(int value) {
+  return Direction.values[value];
+}
+
+double toAlign(Direction direction) {
+  const unit = 0.4;
+  switch (direction) {
+    case Direction.center:
+      return 0;
+    case Direction.left:
+      return -unit * 2;
+    case Direction.down:
+      return -unit;
+    case Direction.up:
+      return unit;
+    case Direction.right:
+      return unit * 2;
   }
 }
 
