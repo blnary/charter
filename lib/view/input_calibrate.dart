@@ -77,14 +77,14 @@ class _InputPageState extends State<InputPage> {
                     Align(
                       alignment: const Alignment(0, spanEnd),
                       child: Container(
-                        height: 4,
+                        height: 6,
                         color: mainColor,
                       ),
                     ),
                     Align(
                       alignment: Alignment(0, posPress),
                       child: Container(
-                        height: 4,
+                        height: 6,
                         color: bgColor,
                       ),
                     ),
@@ -167,13 +167,15 @@ class _NoteState extends State<Note> {
     final Color noteColor = colorScheme.primary.withOpacity(0.8);
 
     double posNote = getPosOf(elapsedTime);
-    // TODO optimize style
     return Align(
       alignment: Alignment(0, posNote),
       child: Container(
-        height: 4,
+        height: 6,
         width: 128,
-        color: noteColor,
+        decoration: BoxDecoration(
+          color: noteColor,
+          borderRadius: BorderRadius.circular(6),
+        ),
       ),
     );
   }

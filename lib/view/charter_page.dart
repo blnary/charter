@@ -323,14 +323,13 @@ class _NoteState extends State<Note> {
         ),
       );
     }
-    final color = strengthToColor(widget.strength);
     return Align(
       alignment: Alignment(toAlign(widget.direction), posNote),
       child: Container(
         height: 6,
         width: 128,
         decoration: BoxDecoration(
-          color: color,
+          color: strengthToColor(widget.strength),
           borderRadius: BorderRadius.circular(6),
         ),
       ),
