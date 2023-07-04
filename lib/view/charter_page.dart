@@ -21,9 +21,12 @@ class CharterPage extends StatefulWidget {
 }
 
 class _CharterPageState extends State<CharterPage> {
+  late StreamSubscription<Duration> _positionSubscription;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final TextEditingController _decimalController =
       TextEditingController(text: "4");
+  final TextEditingController _strengthController =
+      TextEditingController(text: "1");
   final FocusNode _focusNode = FocusNode();
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
@@ -31,7 +34,7 @@ class _CharterPageState extends State<CharterPage> {
   double _sliderValue = 0;
   Duration _audioLength = const Duration(minutes: 1);
   int _decimal = 4;
-  late StreamSubscription<Duration> _positionSubscription;
+  int _strength = 1;
 
   double get elapsedTime {
     if (!_isAudioPlaying) {
@@ -40,6 +43,13 @@ class _CharterPageState extends State<CharterPage> {
     final currentTime = DateTime.now();
     final difference = currentTime.difference(_audioStartTime);
     return difference.inMicroseconds / 1000;
+  }
+
+  void setStrength(int strength) {
+    setState(() {
+      _strengthController.text = strength.toString();
+      _strength = strength;
+    });
   }
 
   @override
@@ -123,7 +133,22 @@ class _CharterPageState extends State<CharterPage> {
     ));
 
     void addAlignedNote(Direction d) {
-      chartsProvider.addAlignedNoteAt(elapsedTime, d, 1, _decimal);
+      chartsProvider.addAlignedNoteAt(elapsedTime, d, _strength, _decimal);
+    }
+
+    Future<void> switchAudio() async {
+      if (_isAudioPlaying) {
+        _isAudioPlaying = false;
+        _audioPlayer.pause();
+      } else {
+        _isAudioPlaying = true;
+        final url = 'http://10.249.45.98${songsProvider.location}';
+        await _audioPlayer.play(UrlSource(url));
+        var duration = await _audioPlayer.getDuration();
+        if (duration != null) {
+          _audioLength = duration;
+        }
+      }
     }
 
     return Listener(
@@ -151,6 +176,29 @@ class _CharterPageState extends State<CharterPage> {
               case LogicalKeyboardKey.keyG:
                 addAlignedNote(Direction.center);
                 break;
+              case LogicalKeyboardKey.keyX:
+                chartsProvider.deleteNoteAt(elapsedTime);
+                break;
+              case LogicalKeyboardKey.space:
+                await switchAudio();
+                break;
+              case LogicalKeyboardKey.keyS:
+                await _audioPlayer
+                    .seek(_audioPosition - const Duration(milliseconds: 1000));
+                break;
+              case LogicalKeyboardKey.keyL:
+                await _audioPlayer
+                    .seek(_audioPosition + const Duration(milliseconds: 1000));
+                break;
+              case LogicalKeyboardKey.keyE:
+                setStrength(1);
+                break;
+              case LogicalKeyboardKey.keyR:
+                setStrength(2);
+                break;
+              case LogicalKeyboardKey.keyT:
+                setStrength(3);
+                break;
             }
           }
         },
@@ -175,7 +223,11 @@ class _CharterPageState extends State<CharterPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "D 左 F 下 J 上 K 右 G 中",
+                        "DFJKG 左下上右中 X 删除 Space 控制音频",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      const Text(
+                        "ERT 小中大力度 SL 回退前进",
                         style: TextStyle(fontSize: 20),
                       ),
                       Text(
@@ -197,21 +249,7 @@ class _CharterPageState extends State<CharterPage> {
                             child: const Tab(icon: Icon(Icons.replay_10_sharp)),
                           ),
                           ElevatedButton(
-                            onPressed: () async {
-                              if (_isAudioPlaying) {
-                                _isAudioPlaying = false;
-                                _audioPlayer.pause();
-                              } else {
-                                _isAudioPlaying = true;
-                                final url =
-                                    'http://10.249.45.98${songsProvider.location}';
-                                await _audioPlayer.play(UrlSource(url));
-                                var duration = await _audioPlayer.getDuration();
-                                if (duration != null) {
-                                  _audioLength = duration;
-                                }
-                              }
-                            },
+                            onPressed: switchAudio,
                             child: _isAudioPlaying
                                 ? const Tab(icon: Icon(Icons.pause_sharp))
                                 : const Tab(icon: Icon(Icons.play_arrow_sharp)),
@@ -241,34 +279,74 @@ class _CharterPageState extends State<CharterPage> {
                                   (_audioLength.inMilliseconds * val).toInt()));
                         },
                       ),
-                      SizedBox(
-                        width: 100,
-                        child: TextField(
-                          controller: _decimalController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: '分母',
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 84,
+                            child: TextField(
+                              controller: _decimalController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: '分母',
+                              ),
+                              onChanged: (value) {
+                                try {
+                                  final decimal = int.parse(value);
+                                  if (decimal <= 0) {
+                                    throw "分母必须大于 0";
+                                  }
+                                  setState(() {
+                                    _decimal = decimal;
+                                  });
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(e.toString()),
+                                          duration:
+                                              const Duration(seconds: 1)));
+                                }
+                              },
+                              onTapOutside: (_) {
+                                _focusNode.requestFocus();
+                              },
+                            ),
                           ),
-                          onChanged: (value) {
-                            try {
-                              final decimal = int.parse(value);
-                              if (decimal <= 0) {
-                                throw "分母必须大于 0";
-                              }
-                              setState(() {
-                                _decimal = decimal;
-                              });
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(e.toString()),
-                                      duration: const Duration(seconds: 1)));
-                            }
-                          },
-                          onTapOutside: (_) {
-                            _focusNode.requestFocus();
-                          },
-                        ),
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 84,
+                            child: TextField(
+                              controller: _strengthController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: '力度',
+                              ),
+                              onChanged: (value) {
+                                try {
+                                  final strength = int.parse(value);
+                                  if (strength <= 0) {
+                                    throw "力度必须大于 0";
+                                  }
+                                  if (strength >= 4) {
+                                    throw "力度必须小于 4";
+                                  }
+                                  setState(() {
+                                    _strength = strength;
+                                  });
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(e.toString()),
+                                          duration:
+                                              const Duration(seconds: 1)));
+                                }
+                              },
+                              onTapOutside: (_) {
+                                _focusNode.requestFocus();
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
