@@ -16,13 +16,20 @@ class AudioPage extends StatefulWidget {
 }
 
 class _AudioPageState extends State<AudioPage> {
+  late StreamSubscription<Duration> _positionSubscription;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final OffsetCalculator _offsetCalculator = OffsetCalculator();
+
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
-  late StreamSubscription<Duration> _positionSubscription;
+  Duration _audioPosition = Duration.zero;
+  Duration _audioLength = const Duration(minutes: 1);
+  double _sliderValue = 0;
 
   double get elapsedTime {
+    if (!_isAudioPlaying) {
+      return _audioPosition.inMicroseconds / 1000;
+    }
     final currentTime = DateTime.now();
     final difference = currentTime.difference(_audioStartTime);
     return difference.inMicroseconds / 1000;
@@ -33,7 +40,9 @@ class _AudioPageState extends State<AudioPage> {
     super.initState();
     _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
       setState(() {
+        _audioPosition = event;
         _audioStartTime = DateTime.now().subtract(event);
+        _sliderValue = event.inMilliseconds / _audioLength.inMilliseconds;
       });
     });
   }
@@ -48,6 +57,7 @@ class _AudioPageState extends State<AudioPage> {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color primColor = colorScheme.primary;
     final Color bgColor = colorScheme.primary.withOpacity(0.1);
     double lastDelay = _offsetCalculator.lastDelay;
     double avgDelay = _offsetCalculator.avgDelay;
@@ -64,13 +74,44 @@ class _AudioPageState extends State<AudioPage> {
       await offsetProvider.setAudioOffset(_offsetCalculator.avgDelay);
     }
 
+    Future<void> switchAudio() async {
+      if (_isAudioPlaying) {
+        _isAudioPlaying = false;
+        _audioPlayer.pause();
+      } else {
+        _isAudioPlaying = true;
+        final url = 'http://10.249.45.98${songsProvider.location}';
+        await _audioPlayer.play(UrlSource(url));
+        _offsetCalculator.setBpm(songsProvider.bpm);
+        _offsetCalculator.setOffset(songsProvider.offset);
+        var duration = await _audioPlayer.getDuration();
+        if (duration != null) {
+          _audioLength = duration;
+        }
+      }
+    }
+
     return RawKeyboardListener(
       focusNode: FocusNode(),
       autofocus: true,
       onKey: (RawKeyEvent event) async {
-        if (event is RawKeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.space) {
-          await setDelay();
+        if (event is RawKeyDownEvent) {
+          switch (event.logicalKey) {
+            case LogicalKeyboardKey.space:
+              await setDelay();
+              break;
+            case LogicalKeyboardKey.space:
+              await switchAudio();
+              break;
+            case LogicalKeyboardKey.keyS:
+              await _audioPlayer
+                  .seek(_audioPosition - const Duration(milliseconds: 1000));
+              break;
+            case LogicalKeyboardKey.keyL:
+              await _audioPlayer
+                  .seek(_audioPosition + const Duration(milliseconds: 1000));
+              break;
+          }
         }
       },
       child: Row(
@@ -114,23 +155,40 @@ class _AudioPageState extends State<AudioPage> {
                       children: [
                         ElevatedButton(
                           onPressed: () async {
-                            if (_isAudioPlaying) {
-                              _isAudioPlaying = false;
-                              _audioPlayer.pause();
-                            } else {
-                              _isAudioPlaying = true;
-                              final url =
-                                  'http://10.249.45.98/songs/${songsProvider.id}';
-                              _offsetCalculator.setBpm(songsProvider.bpm);
-                              _offsetCalculator.setOffset(songsProvider.offset);
-                              await _audioPlayer.play(UrlSource(url));
-                            }
+                            await _audioPlayer.seek(_audioPosition -
+                                const Duration(milliseconds: 1000));
                           },
+                          child: const Tab(icon: Icon(Icons.replay_10_sharp)),
+                        ),
+                        ElevatedButton(
+                          onPressed: switchAudio,
                           child: _isAudioPlaying
-                              ? const Tab(icon: Icon(Icons.pause))
-                              : const Tab(icon: Icon(Icons.play_arrow)),
+                              ? const Tab(icon: Icon(Icons.pause_sharp))
+                              : const Tab(icon: Icon(Icons.play_arrow_sharp)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await _audioPlayer.seek(_audioPosition +
+                                const Duration(milliseconds: 1000));
+                          },
+                          child: const Tab(icon: Icon(Icons.forward_10_sharp)),
                         ),
                       ],
+                    ),
+                    Slider(
+                      autofocus: false,
+                      value: _sliderValue.clamp(0, 1),
+                      min: 0,
+                      activeColor: primColor,
+                      max: 1,
+                      onChanged: (val) async {
+                        setState(() {
+                          _sliderValue = val;
+                        });
+                        await _audioPlayer.seek(Duration(
+                            milliseconds:
+                                (_audioLength.inMilliseconds * val).toInt()));
+                      },
                     ),
                   ],
                 ),

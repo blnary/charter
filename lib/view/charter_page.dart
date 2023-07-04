@@ -28,6 +28,7 @@ class _CharterPageState extends State<CharterPage> {
   final TextEditingController _strengthController =
       TextEditingController(text: "1");
   final FocusNode _focusNode = FocusNode();
+
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
   Duration _audioPosition = Duration.zero;
