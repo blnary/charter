@@ -34,7 +34,7 @@ class _ChartsPageState extends State<ChartsPage> {
                 style: const TextStyle(fontSize: 20),
               ),
               Text(
-                "偏移: ${level.offset ~/ 44.1} ms",
+                "偏移: ${level.offsetSamp ~/ 44.1} ms",
                 style: const TextStyle(fontSize: 20),
               ),
             ];

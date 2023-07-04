@@ -187,8 +187,7 @@ class _SongsPageState extends State<SongsPage> {
               return ListTile(
                 onTap: () {
                   songsProvider.select(index);
-                  // TODO use double for all offsets
-                  chartsProvider.initLevel(song.bpm, song.offset);
+                  chartsProvider.initLevel(song.bpm, song.offsetMs);
                 },
                 tileColor: isSelected
                     ? selectedColor

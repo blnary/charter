@@ -7,14 +7,14 @@ class Song {
   final String name;
   final String location;
   final double bpm;
-  final double offset;
+  final double offsetMs;
 
   Song({
     required this.id,
     required this.name,
     required this.location,
     required this.bpm,
-    required this.offset,
+    required this.offsetMs,
   });
 
   factory Song.fromJson(Map<String, dynamic> json) {
@@ -25,7 +25,7 @@ class Song {
       name: json['name'] as String,
       location: json['location'] as String,
       bpm: bpm.toDouble(),
-      offset: offset.toDouble(),
+      offsetMs: offset.toDouble(),
     );
   }
 }
@@ -46,7 +46,7 @@ class SongsProvider with ChangeNotifier {
   String get name => songs[_selected].name;
   String get location => songs[_selected].location;
   double get bpm => songs[_selected].bpm;
-  double get offset => songs[_selected].offset;
+  double get offset => songs[_selected].offsetMs;
 
   SongsProvider() {
     fetch();
@@ -93,7 +93,7 @@ class SongsProvider with ChangeNotifier {
           name: name,
           location: location,
           bpm: bpm.toDouble(),
-          offset: offset.toDouble(),
+          offsetMs: offset.toDouble(),
         );
         notifyListeners();
       } else {
@@ -121,7 +121,7 @@ class SongsProvider with ChangeNotifier {
           name: name,
           location: location,
           bpm: bpm.toDouble(),
-          offset: offset.toDouble(),
+          offsetMs: offset.toDouble(),
         );
         notifyListeners();
       } else {
@@ -151,7 +151,7 @@ class SongsProvider with ChangeNotifier {
           name: name,
           location: location,
           bpm: bpm.toDouble(),
-          offset: offset.toDouble(),
+          offsetMs: offset.toDouble(),
         );
         notifyListeners();
       } else {
