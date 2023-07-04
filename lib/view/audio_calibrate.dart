@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:charter/util/song_player.dart';
 import 'package:charter/model/offset.dart';
 import 'package:charter/util/offset_calculator.dart';
 
@@ -21,8 +20,6 @@ class _AudioPageState extends State<AudioPage> {
   final OffsetCalculator _offsetCalculator = OffsetCalculator();
   bool _isAudioPlaying = false;
   DateTime _audioStartTime = DateTime.now();
-  double _sliderValue = 0;
-  Duration audioLength = const Duration(minutes: 1);
   late StreamSubscription<Duration> _positionSubscription;
 
   int get elapsedTime {
@@ -37,7 +34,6 @@ class _AudioPageState extends State<AudioPage> {
     _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
       setState(() {
         _audioStartTime = DateTime.now().subtract(event);
-        _sliderValue = event.inMilliseconds / audioLength.inMilliseconds;
       });
     });
   }
@@ -113,7 +109,6 @@ class _AudioPageState extends State<AudioPage> {
                       "平均延迟: $avgDelay ms",
                       style: const TextStyle(fontSize: 20),
                     ),
-                    // TODO encapsulate audio player
                     ButtonBar(
                       alignment: MainAxisAlignment.center,
                       children: [
@@ -129,43 +124,11 @@ class _AudioPageState extends State<AudioPage> {
                               _offsetCalculator.setBpm(songsProvider.bpm);
                               _offsetCalculator.setOffset(songsProvider.offset);
                               await _audioPlayer.play(UrlSource(url));
-                              await Future.delayed(
-                                  const Duration(milliseconds: 200));
-                              var duration = await _audioPlayer.getDuration();
-                              if (duration != null) {
-                                // TODO fix this
-                                print(duration);
-                                audioLength = duration;
-                              }
                             }
                           },
                           child: _isAudioPlaying
                               ? const Tab(icon: Icon(Icons.pause))
                               : const Tab(icon: Icon(Icons.play_arrow)),
-                        ),
-                        Slider(
-                          value: _sliderValue.clamp(0, 1),
-                          min: 0,
-                          activeColor: Colors.red,
-                          max: 1,
-                          onChangeEnd: (double value) async {
-                            // await audioPlayer.fixedPlayer!.resume();
-                          },
-                          onChangeStart: (double value) async {
-                            if (_isAudioPlaying) {
-                              _isAudioPlaying = false;
-                              _audioPlayer.pause();
-                            }
-                          },
-                          onChanged: (val) {
-                            setState(() {
-                              _sliderValue = val;
-                              _audioPlayer.seek(Duration(
-                                  milliseconds:
-                                      (audioLength.inMilliseconds * val)
-                                          .toInt()));
-                            });
-                          },
                         ),
                       ],
                     ),

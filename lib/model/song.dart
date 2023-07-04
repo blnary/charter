@@ -5,12 +5,14 @@ import 'package:http/http.dart' as http;
 class Song {
   final int id;
   final String name;
+  final String location;
   final double bpm;
   final int offset;
 
   Song({
     required this.id,
     required this.name,
+    required this.location,
     required this.bpm,
     required this.offset,
   });
@@ -21,6 +23,7 @@ class Song {
     return Song(
       id: json['id'] as int,
       name: json['name'] as String,
+      location: json['location'] as String,
       bpm: bpm.toDouble(),
       offset: offset.toInt(),
     );
@@ -41,6 +44,7 @@ class SongsProvider with ChangeNotifier {
   int get selected => _selected;
   int get id => songs[_selected].id;
   String get name => songs[_selected].name;
+  String get location => songs[_selected].location;
   double get bpm => songs[_selected].bpm;
   int get offset => songs[_selected].offset;
 
@@ -87,6 +91,7 @@ class SongsProvider with ChangeNotifier {
         songs[_selected] = Song(
           id: id,
           name: name,
+          location: location,
           bpm: bpm.toDouble(),
           offset: offset.toInt(),
         );
@@ -114,6 +119,7 @@ class SongsProvider with ChangeNotifier {
         songs[_selected] = Song(
           id: id,
           name: name,
+          location: location,
           bpm: bpm.toDouble(),
           offset: offset.toInt(),
         );
@@ -143,6 +149,7 @@ class SongsProvider with ChangeNotifier {
         songs[_selected] = Song(
           id: id,
           name: name,
+          location: location,
           bpm: bpm.toDouble(),
           offset: offset.toInt(),
         );

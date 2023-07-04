@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -22,8 +21,9 @@ class _SongsPageState extends State<SongsPage> {
     try {
       var result = await FilePicker.platform.pickFiles(
           type: FileType.custom, allowedExtensions: ['mp3', 'wav', 'ogg']);
-      File file = File(result!.files.first.path!);
-      var msg = await uploadFile(file);
+      var bytes = result!.files.first.bytes!;
+      var filename = result.files.first.name;
+      var msg = await uploadBytes(bytes, filename);
       return msg;
     } catch (error) {
       return error.toString();
