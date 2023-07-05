@@ -80,9 +80,6 @@ class ChartsProvider with ChangeNotifier {
     double unit = 60000 / bpm / decimal;
     double offsetMs = _level!.offsetSamp / 44.1;
     double unitCount = (time - offsetMs) / unit;
-    double delay = (unitCount - unitCount.round()) * unit;
-    print(
-        "delay: ${delay.toInt()}, unit: ${unit.toInt()}, bpm: ${bpm.toInt()}");
     double alignedTime = unitCount.round() * unit + offsetMs;
     addNoteAt(alignedTime, dir, strength);
   }
@@ -97,6 +94,14 @@ class ChartsProvider with ChangeNotifier {
     _level?.notes
         .removeWhere((element) => (time - element.p / 44.1).abs() < 300);
     notifyListeners();
+  }
+
+  Future<String> createOrSet(int songId) async {
+    if (_selected == null) {
+      return create(songId);
+    } else {
+      return set();
+    }
   }
 
   Future<String> create(int songId) async {
@@ -129,6 +134,9 @@ class ChartsProvider with ChangeNotifier {
 
   Future<String> set() async {
     try {
+      // Generate endPos and hardStartPos for level
+      level!.endPos = level!.notes.last.p;
+      level!.hardStartPos = level!.notes.firstWhere((note) => note.s == 3).p;
       final url = 'http://10.249.45.98/charts/${id!}';
       Level oldContent = _charts[_selected!].level;
       _charts[_selected!].level = level!;
@@ -338,7 +346,7 @@ class Chart {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'content': level,
+      'content': jsonEncode(level.toJson()),
       'song_id': songId,
     };
   }
