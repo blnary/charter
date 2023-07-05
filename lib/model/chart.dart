@@ -144,7 +144,9 @@ class ChartsProvider with ChangeNotifier {
 
   Future<String> set() async {
     try {
-      // Generate endPos and hardStartPos for level
+      // Sort notes for level, generate endPos and hardStartPos for level
+      level!.notes.sort((a, b) => a.p.compareTo(b.p));
+      level!.notes.asMap().forEach((index, note) => note.id = index);
       level!.endPos = level!.notes.last.p;
       level!.startPos = level!.notes.first.p;
       level!.hardStartPos = level!.notes.firstWhere((note) => note.s == 3).p;

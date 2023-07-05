@@ -192,6 +192,13 @@ class _CharterPageState extends State<CharterPage> {
                   .round()));
     }
 
+    Future<void> setPlaybackRate(double playbackRate) async {
+      setState(() {
+        _playbackRate = playbackRate;
+      });
+      await _audioPlayer.setPlaybackRate(_playbackRate);
+    }
+
     // Render page
     return Listener(
       onPointerDown: (event) async {
@@ -224,11 +231,23 @@ class _CharterPageState extends State<CharterPage> {
               case LogicalKeyboardKey.space:
                 await switchAudio();
                 break;
+              case LogicalKeyboardKey.keyA:
+                await setPlaybackRate(0.5);
+                break;
+              case LogicalKeyboardKey.semicolon:
+                await setPlaybackRate(1);
+                break;
+              case LogicalKeyboardKey.keyX:
+                await seekAudio(-64);
+                break;
+              case LogicalKeyboardKey.period:
+                await seekAudio(64);
+                break;
               case LogicalKeyboardKey.keyS:
-                await seekAudio(-4);
+                await seekAudio(-8);
                 break;
               case LogicalKeyboardKey.keyL:
-                await seekAudio(4);
+                await seekAudio(8);
                 break;
               case LogicalKeyboardKey.keyW:
                 await seekAudio(-1);
@@ -413,12 +432,8 @@ class _CharterPageState extends State<CharterPage> {
                                   if (playbackRate > 4) {
                                     throw "速率必须小于或等于 4";
                                   }
-                                  setState(() {
-                                    _playbackRate = playbackRate;
-                                  });
+                                  await setPlaybackRate(playbackRate);
                                 } catch (_) {}
-                                await _audioPlayer
-                                    .setPlaybackRate(_playbackRate);
                               },
                               onTapOutside: (_) {
                                 _focusNode.requestFocus();
