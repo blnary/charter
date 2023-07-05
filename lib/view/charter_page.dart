@@ -251,6 +251,19 @@ class _CharterPageState extends State<CharterPage> {
                         children: [
                           ElevatedButton(
                             onPressed: () async {
+                              var msg = await chartsProvider
+                                  .createOrSet(songsProvider.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(msg),
+                                        duration: const Duration(seconds: 1)));
+                              }
+                            },
+                            child: const Tab(icon: Icon(Icons.upload_sharp)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
                               await _audioPlayer.seek(_audioPosition -
                                   const Duration(milliseconds: 1000));
                             },
