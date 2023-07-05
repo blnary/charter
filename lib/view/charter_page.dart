@@ -27,6 +27,8 @@ class _CharterPageState extends State<CharterPage> {
       TextEditingController(text: "4");
   final TextEditingController _strengthController =
       TextEditingController(text: "1");
+  final TextEditingController _playbackRateController =
+      TextEditingController(text: "1");
   final FocusNode _focusNode = FocusNode();
 
   bool _isAudioPlaying = false;
@@ -36,13 +38,14 @@ class _CharterPageState extends State<CharterPage> {
   Duration _audioLength = const Duration(minutes: 1);
   int _decimal = 4;
   int _strength = 1;
+  double _playbackRate = 1;
 
   double get elapsedTime {
     if (!_isAudioPlaying) {
       return _audioPosition.inMicroseconds / 1000;
     }
     final currentTime = DateTime.now();
-    final difference = currentTime.difference(_audioStartTime);
+    final difference = currentTime.difference(_audioStartTime) * _playbackRate;
     return difference.inMicroseconds / 1000;
   }
 
@@ -59,7 +62,7 @@ class _CharterPageState extends State<CharterPage> {
     _positionSubscription = _audioPlayer.onPositionChanged.listen((event) {
       setState(() {
         _audioPosition = event;
-        _audioStartTime = DateTime.now().subtract(event);
+        _audioStartTime = DateTime.now().subtract(event * (1 / _playbackRate));
         _sliderValue = event.inMilliseconds / _audioLength.inMilliseconds;
       });
     });
@@ -82,8 +85,11 @@ class _CharterPageState extends State<CharterPage> {
     final offsetProvider = Provider.of<OffsetProvider>(context);
     final songsProvider = Provider.of<SongsProvider>(context);
     final chartsProvider = Provider.of<ChartsProvider>(context);
-    final displayTime =
-        elapsedTime - offsetProvider.audioOffset + offsetProvider.inputOffset;
+    final audioOffset =
+        _isAudioPlaying ? offsetProvider.audioOffset * _playbackRate : 0;
+    final inputOffset =
+        _isAudioPlaying ? offsetProvider.inputOffset * _playbackRate : 0;
+    final displayTime = elapsedTime - audioOffset + inputOffset;
     final level = chartsProvider.level;
     if (level == null) {
       return const Center(child: Text("请选定关卡"));
@@ -91,8 +97,10 @@ class _CharterPageState extends State<CharterPage> {
 
     // Render notes
     final mspb = 60000 / level.bpm;
-    final offset = level.offsetSamp / 44.1;
-    final lastBeat = ((displayTime - offset) / mspb).round() * mspb + offset;
+    final unit = mspb / _decimal;
+    final offsetMs = level.offsetSamp / 44.1;
+    final lastBeat =
+        ((displayTime - offsetMs) / mspb).round() * mspb + offsetMs;
     final notes = level.notes
         .map<Widget?>((e) {
           final startTime = Duration(milliseconds: e.p ~/ 44.1);
@@ -105,6 +113,7 @@ class _CharterPageState extends State<CharterPage> {
             audioStartTime: _audioStartTime,
             audioPosition: _audioPosition,
             isAudioPlaying: _isAudioPlaying,
+            playbackRate: _playbackRate,
             direction: fromInt(e.d),
             strength: e.s,
           );
@@ -112,10 +121,10 @@ class _CharterPageState extends State<CharterPage> {
         .whereType<Widget>()
         .toList();
     notes.addAll(range(-32, 32).map<Widget?>((e) {
-      final timeMs = lastBeat + e * mspb / _decimal;
+      final timeMs = lastBeat + e * unit;
       final startTime = Duration(milliseconds: timeMs.round());
       final diff = timeMs - displayTime;
-      if (diff > period * 3 || diff < 0) {
+      if (diff > period * 3 || diff < period * -3) {
         return null;
       }
       return Note(
@@ -123,6 +132,7 @@ class _CharterPageState extends State<CharterPage> {
         audioStartTime: _audioStartTime,
         audioPosition: _audioPosition,
         isAudioPlaying: _isAudioPlaying,
+        playbackRate: _playbackRate,
         isLine: true,
         isMainLine: e % _decimal == 0,
       );
@@ -137,11 +147,11 @@ class _CharterPageState extends State<CharterPage> {
 
     void addAlignedNote(Direction d) {
       chartsProvider.addAlignedNoteAt(
-          elapsedTime - offsetProvider.audioOffset, d, _strength, _decimal);
+          elapsedTime - audioOffset, d, _strength, _decimal);
     }
 
     void deleteNote() {
-      chartsProvider.deleteNoteAt(elapsedTime - offsetProvider.audioOffset);
+      chartsProvider.deleteNoteAt(elapsedTime - audioOffset);
     }
 
     Future<void> switchAudio() async {
@@ -157,6 +167,14 @@ class _CharterPageState extends State<CharterPage> {
           _audioLength = duration;
         }
       }
+    }
+
+    Future<void> seekAudio(int unitCount) async {
+      await _audioPlayer.seek(Duration(
+          milliseconds:
+              ((((elapsedTime - offsetMs) / unit).round() + unitCount) * unit +
+                      offsetMs)
+                  .round()));
     }
 
     return Listener(
@@ -184,19 +202,23 @@ class _CharterPageState extends State<CharterPage> {
               case LogicalKeyboardKey.keyG:
                 addAlignedNote(Direction.center);
                 break;
-              case LogicalKeyboardKey.keyX:
+              case LogicalKeyboardKey.keyH:
                 deleteNote();
                 break;
               case LogicalKeyboardKey.space:
                 await switchAudio();
                 break;
               case LogicalKeyboardKey.keyS:
-                await _audioPlayer
-                    .seek(_audioPosition - const Duration(milliseconds: 1000));
+                await seekAudio(-4);
                 break;
               case LogicalKeyboardKey.keyL:
-                await _audioPlayer
-                    .seek(_audioPosition + const Duration(milliseconds: 1000));
+                await seekAudio(4);
+                break;
+              case LogicalKeyboardKey.keyW:
+                await seekAudio(-1);
+                break;
+              case LogicalKeyboardKey.keyO:
+                await seekAudio(1);
                 break;
               case LogicalKeyboardKey.keyE:
                 setStrength(1);
@@ -231,7 +253,7 @@ class _CharterPageState extends State<CharterPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "DFJKG 左下上右中 X 删除 Space 控制音频",
+                        "DFJKG 左下上右中 H 删除 Space 控制音频",
                         style: TextStyle(fontSize: 20),
                       ),
                       const Text(
@@ -254,6 +276,8 @@ class _CharterPageState extends State<CharterPage> {
                               var msg = await chartsProvider
                                   .createOrSet(songsProvider.id);
                               if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .hideCurrentSnackBar();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                         content: Text(msg),
@@ -321,6 +345,8 @@ class _CharterPageState extends State<CharterPage> {
                                     _decimal = decimal;
                                   });
                                 } catch (e) {
+                                  ScaffoldMessenger.of(context)
+                                      .hideCurrentSnackBar();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                           content: Text(e.toString()),
@@ -355,12 +381,52 @@ class _CharterPageState extends State<CharterPage> {
                                     _strength = strength;
                                   });
                                 } catch (e) {
+                                  ScaffoldMessenger.of(context)
+                                      .hideCurrentSnackBar();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                           content: Text(e.toString()),
                                           duration:
                                               const Duration(seconds: 1)));
                                 }
+                              },
+                              onTapOutside: (_) {
+                                _focusNode.requestFocus();
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 84,
+                            child: TextField(
+                              controller: _playbackRateController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: '速率',
+                              ),
+                              onChanged: (value) async {
+                                try {
+                                  final playbackRate = double.parse(value);
+                                  if (playbackRate < 0.1) {
+                                    throw "速率必须大于或等于 0.1";
+                                  }
+                                  if (playbackRate > 4) {
+                                    throw "速率必须小于或等于 4";
+                                  }
+                                  setState(() {
+                                    _playbackRate = playbackRate;
+                                  });
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context)
+                                      .hideCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(e.toString()),
+                                          duration:
+                                              const Duration(seconds: 1)));
+                                }
+                                await _audioPlayer
+                                    .setPlaybackRate(_playbackRate);
                               },
                               onTapOutside: (_) {
                                 _focusNode.requestFocus();
@@ -385,6 +451,7 @@ class Note extends StatefulWidget {
   final DateTime audioStartTime;
   final Duration audioPosition;
   final Duration startTime;
+  final double playbackRate;
   final bool isAudioPlaying;
   final int strength;
   final Direction direction;
@@ -396,6 +463,7 @@ class Note extends StatefulWidget {
       required this.startTime,
       required this.audioStartTime,
       required this.audioPosition,
+      required this.playbackRate,
       required this.isAudioPlaying,
       this.strength = 0,
       this.direction = Direction.center,
@@ -430,14 +498,21 @@ class _NoteState extends State<Note> {
       return widget.audioPosition.inMicroseconds / 1000;
     }
     final currentTime = DateTime.now();
-    final difference = currentTime.difference(widget.audioStartTime);
+    final difference =
+        currentTime.difference(widget.audioStartTime) * widget.playbackRate;
     return difference.inMicroseconds / 1000;
   }
 
   @override
   Widget build(BuildContext context) {
     final offsetProvider = Provider.of<OffsetProvider>(context);
-    final displayTime = elapsedTime - offsetProvider.audioOffset;
+    final audioOffset = widget.isAudioPlaying
+        ? offsetProvider.audioOffset * widget.playbackRate
+        : 0;
+    final inputOffset = widget.isAudioPlaying
+        ? offsetProvider.inputOffset * widget.playbackRate
+        : 0;
+    final displayTime = elapsedTime - audioOffset + inputOffset;
     final delta = displayTime - widget.startTime.inMicroseconds / 1000;
     final posNote = getPosOf(delta);
     if (widget.isLine) {
