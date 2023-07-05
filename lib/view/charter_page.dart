@@ -115,7 +115,7 @@ class _CharterPageState extends State<CharterPage> {
       final timeMs = lastBeat + e * mspb / _decimal;
       final startTime = Duration(milliseconds: timeMs.round());
       final diff = timeMs - displayTime;
-      if (diff > period * 3 || diff < -period * 3) {
+      if (diff > period * 3 || diff < 0) {
         return null;
       }
       return Note(
