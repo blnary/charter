@@ -344,15 +344,7 @@ class _CharterPageState extends State<CharterPage> {
                                   setState(() {
                                     _decimal = decimal;
                                   });
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context)
-                                      .hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(e.toString()),
-                                          duration:
-                                              const Duration(seconds: 1)));
-                                }
+                                } catch (_) {}
                               },
                               onTapOutside: (_) {
                                 _focusNode.requestFocus();
@@ -380,15 +372,7 @@ class _CharterPageState extends State<CharterPage> {
                                   setState(() {
                                     _strength = strength;
                                   });
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context)
-                                      .hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(e.toString()),
-                                          duration:
-                                              const Duration(seconds: 1)));
-                                }
+                                } catch (_) {}
                               },
                               onTapOutside: (_) {
                                 _focusNode.requestFocus();
@@ -416,15 +400,7 @@ class _CharterPageState extends State<CharterPage> {
                                   setState(() {
                                     _playbackRate = playbackRate;
                                   });
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context)
-                                      .hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(e.toString()),
-                                          duration:
-                                              const Duration(seconds: 1)));
-                                }
+                                } catch (_) {}
                                 await _audioPlayer
                                     .setPlaybackRate(_playbackRate);
                               },
