@@ -30,6 +30,8 @@ class _CharterPageState extends State<CharterPage> {
       TextEditingController(text: "1");
   final TextEditingController _playbackRateController =
       TextEditingController(text: "1");
+  late TextEditingController _chartNameController;
+  late TextEditingController _difficultyController;
   final FocusNode _focusNode = FocusNode();
 
   bool _isAudioPlaying = false;
@@ -67,6 +69,17 @@ class _CharterPageState extends State<CharterPage> {
         _sliderValue = event.inMilliseconds / _audioLength.inMilliseconds;
       });
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final chartsProvider = Provider.of<ChartsProvider>(context);
+    final level = chartsProvider.level;
+    if (level == null) return;
+    _chartNameController = TextEditingController(text: level.name);
+    _difficultyController =
+        TextEditingController(text: level.difficulty.toString());
   }
 
   @override
@@ -146,6 +159,7 @@ class _CharterPageState extends State<CharterPage> {
       ),
     ));
 
+    // Helper functions
     void addAlignedNote(Direction d) {
       chartsProvider.addAlignedNoteAt(
           elapsedTime - audioOffset, d, _strength, _decimal);
@@ -178,6 +192,7 @@ class _CharterPageState extends State<CharterPage> {
                   .round()));
     }
 
+    // Render page
     return Listener(
       onPointerDown: (event) async {
         _focusNode.requestFocus();
@@ -404,6 +419,50 @@ class _CharterPageState extends State<CharterPage> {
                                 } catch (_) {}
                                 await _audioPlayer
                                     .setPlaybackRate(_playbackRate);
+                              },
+                              onTapOutside: (_) {
+                                _focusNode.requestFocus();
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 84,
+                            child: TextField(
+                              controller: _difficultyController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: '难度',
+                              ),
+                              onChanged: (value) async {
+                                try {
+                                  final difficulty = double.parse(value);
+                                  if (difficulty <= 0) {
+                                    throw "难度必须大于 0";
+                                  }
+                                  setState(() {
+                                    chartsProvider.setDifficulty(difficulty);
+                                  });
+                                } catch (_) {}
+                              },
+                              onTapOutside: (_) {
+                                _focusNode.requestFocus();
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 160,
+                            child: TextField(
+                              controller: _chartNameController,
+                              keyboardType: TextInputType.text,
+                              decoration: const InputDecoration(
+                                labelText: '谱面名称',
+                              ),
+                              onChanged: (value) async {
+                                setState(() {
+                                  chartsProvider.setName(value);
+                                });
                               },
                               onTapOutside: (_) {
                                 _focusNode.requestFocus();
