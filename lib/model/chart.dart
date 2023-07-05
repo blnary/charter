@@ -53,11 +53,11 @@ class ChartsProvider with ChangeNotifier {
     }
   }
 
-  void initLevel(double bpm, double offsetMs) {
+  void initLevel(double bpm, double offsetMs, String name) {
     int offsetSamp = (offsetMs * 44.1).round();
     _level = Level(
       id: 0,
-      name: 'Untitled',
+      name: name,
       bpm: bpm,
       offsetSamp: offsetSamp,
       startPos: offsetSamp,
@@ -72,6 +72,16 @@ class ChartsProvider with ChangeNotifier {
     );
     _selected = null;
     notifyListeners();
+  }
+
+  void setName(String name) {
+    if (_level == null) return;
+    _level!.name = name;
+  }
+
+  void setDifficulty(double diffculty) {
+    if (_level == null) return;
+    _level!.difficulty = diffculty;
   }
 
   void addAlignedNoteAt(double time, Direction dir, int strength, int decimal) {
