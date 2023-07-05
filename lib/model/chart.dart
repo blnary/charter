@@ -146,6 +146,7 @@ class ChartsProvider with ChangeNotifier {
     try {
       // Generate endPos and hardStartPos for level
       level!.endPos = level!.notes.last.p;
+      level!.startPos = level!.notes.first.p;
       level!.hardStartPos = level!.notes.firstWhere((note) => note.s == 3).p;
       final url = 'http://10.249.45.98/charts/${id!}';
       Level oldContent = _charts[_selected!].level;
