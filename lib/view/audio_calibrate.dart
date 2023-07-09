@@ -80,7 +80,7 @@ class _AudioPageState extends State<AudioPage> {
         _audioPlayer.pause();
       } else {
         _isAudioPlaying = true;
-        final url = 'http://10.249.45.98${songsProvider.location}';
+        final url = 'http://test.undecla.red${songsProvider.location}';
         await _audioPlayer.play(UrlSource(url));
         _offsetCalculator.setBpm(songsProvider.bpm);
         _offsetCalculator.setOffsetMs(songsProvider.offsetMs);

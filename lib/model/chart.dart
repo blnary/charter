@@ -30,7 +30,7 @@ class ChartsProvider with ChangeNotifier {
 
   Future<void> fetch() async {
     try {
-      const url = "http://10.249.45.98/charts";
+      const url = "http://test.undecla.red/charts";
       _loading = true;
       notifyListeners();
       final response = await http.get(Uri.parse(url));
@@ -116,7 +116,7 @@ class ChartsProvider with ChangeNotifier {
 
   Future<String> create(int songId) async {
     try {
-      const url = 'http://10.249.45.98/charts';
+      const url = 'http://test.undecla.red/charts';
       final chart = Chart(id: 0, songId: songId, level: _level!);
       final jsonData = chart.toJson();
       final response = await http.post(
@@ -150,7 +150,7 @@ class ChartsProvider with ChangeNotifier {
       level!.endPos = level!.notes.last.p;
       level!.startPos = level!.notes.first.p;
       level!.hardStartPos = level!.notes.firstWhere((note) => note.s == 3).p;
-      final url = 'http://10.249.45.98/charts/${id!}';
+      final url = 'http://test.undecla.red/charts/${id!}';
       Level oldContent = _charts[_selected!].level;
       _charts[_selected!].level = level!;
       final jsonData = _charts[_selected!].toJson();

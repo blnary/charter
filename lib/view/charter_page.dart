@@ -175,7 +175,7 @@ class _CharterPageState extends State<CharterPage> {
         _audioPlayer.pause();
       } else {
         _isAudioPlaying = true;
-        final url = 'http://10.249.45.98${songsProvider.location}';
+        final url = 'http://test.undecla.red${songsProvider.location}';
         await _audioPlayer.play(UrlSource(url));
         var duration = await _audioPlayer.getDuration();
         if (duration != null) {
