@@ -54,7 +54,7 @@ class SongsProvider with ChangeNotifier {
 
   Future<void> fetch() async {
     try {
-      const url = "http://10.249.45.98/songs";
+      const url = "http://test.undecla.red/songs";
       _loading = true;
       notifyListeners();
       final response = await http.get(Uri.parse(url));
@@ -79,7 +79,7 @@ class SongsProvider with ChangeNotifier {
 
   Future<String> sync() async {
     try {
-      final url = 'http://10.249.45.98/sync/$id';
+      final url = 'http://test.undecla.red/sync/$id';
       final response = await http.post(Uri.parse(url));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as dynamic;
@@ -107,7 +107,7 @@ class SongsProvider with ChangeNotifier {
 
   Future<String> cal() async {
     try {
-      final url = 'http://10.249.45.98/cal/$id';
+      final url = 'http://test.undecla.red/cal/$id';
       final response = await http.post(Uri.parse(url));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as dynamic;
@@ -135,7 +135,7 @@ class SongsProvider with ChangeNotifier {
 
   Future<String> set(double bpm, int offset) async {
     try {
-      final url = 'http://10.249.45.98/bpm/$id';
+      final url = 'http://test.undecla.red/bpm/$id';
       final jsonData = {
         'bpm': bpm,
         'offset': offset,

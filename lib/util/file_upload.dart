@@ -6,7 +6,7 @@ import 'package:path/path.dart' as path;
 Future<String> uploadFile(File file) async {
   try {
     var request =
-        http.MultipartRequest('POST', Uri.parse('http://10.249.45.98/songs'));
+        http.MultipartRequest('POST', Uri.parse('http://test.undecla.red/songs'));
 
     // Add the file to the request
     var fileStream = http.ByteStream(Stream.castFrom(file.openRead()));
@@ -29,7 +29,7 @@ Future<String> uploadFile(File file) async {
 Future<String> uploadBytes(Uint8List file, String filename) async {
   try {
     var request =
-        http.MultipartRequest('POST', Uri.parse('http://10.249.45.98/songs'));
+        http.MultipartRequest('POST', Uri.parse('http://test.undecla.red/songs'));
 
     // Create a ByteStream from the Uint8List
     var fileStream = http.ByteStream.fromBytes(file);
